@@ -63,22 +63,23 @@ router.post('/upload-photo', authMiddleware, upload.single('photo'), async (req,
     if (!req.file) {
       return res.status(400).json({ error: '파일을 업로드해주세요' });
     }
-    
-    const imageUrl = `/uploads/${req.file.filename}`;
-    
+
+    // Cloudinary에 업로드된 이미지 URL
+    const imageUrl = req.file.path;
+
     // AI 평가 (개발 초기에는 랜덤 점수)
     const aiScore = await evaluateWithAI(imageUrl);
-    
+
     // 사용자 프로필 업데이트
     const user = await User.findByIdAndUpdate(
       req.user.id,
-      { 
+      {
         profileImage: imageUrl,
-        aiScore 
+        aiScore
       },
       { new: true }
     ).select('-password');
-    
+
     res.json({
       success: true,
       imageUrl,
