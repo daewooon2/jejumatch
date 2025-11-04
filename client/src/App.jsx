@@ -9,6 +9,7 @@ import ProfileCreationPage from './pages/ProfileCreationPage';
 import DiscoveryPage from './pages/DiscoveryPage';
 import MatchesPage from './pages/MatchesPage';
 import ChatRoomPage from './pages/ChatRoomPage';
+import LikesReceivedPage from './pages/LikesReceivedPage';
 
 import './assets/styles/global.css';
 
@@ -39,13 +40,19 @@ function App() {
               <MatchesPage />
             </ProtectedRoute>
           } />
-          
+
+          <Route path="/likes-received" element={
+            <ProtectedRoute>
+              <LikesReceivedPage />
+            </ProtectedRoute>
+          } />
+
           <Route path="/chat/:matchId" element={
             <ProtectedRoute>
               <ChatRoomPage />
             </ProtectedRoute>
           } />
-          
+
           {/* 기본 리다이렉트 */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

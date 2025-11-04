@@ -28,17 +28,19 @@ router.get('/', authMiddleware, async (req, res, next) => {
       query.hobbies = { $in: hobbies };
     }
     
-    // 사용자 조회
+    // 사용자 조회 (likesCount 계산을 위해 likedByUsers 포함)
     let users = await User.find(query)
-      .select('-password -email -likedUsers -likedByUsers')
+      .select('-password -email -likedUsers')
       .lean();
-    
+
     // 좋아요 수 및 내가 좋아요 했는지 추가
     users = users.map(user => ({
       ...user,
       id: user._id,
       likesCount: user.likedByUsers?.length || 0,
-      isLikedByMe: currentUser.likedUsers.some(id => id.equals(user._id))
+      isLikedByMe: currentUser.likedUsers.some(id => id.equals(user._id)),
+      // 보안: likedByUsers 배열은 클라이언트에 전송하지 않음
+      likedByUsers: undefined
     }));
     
     // 정렬

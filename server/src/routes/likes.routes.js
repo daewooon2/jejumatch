@@ -59,14 +59,14 @@ router.delete('/:userId', authMiddleware, async (req, res, next) => {
   try {
     const currentUserId = req.user.id;
     const targetUserId = req.params.userId;
-    
+
     const currentUser = await User.findById(currentUserId);
     const targetUser = await User.findById(targetUserId);
-    
+
     if (!targetUser) {
       return res.status(404).json({ error: '사용자를 찾을 수 없습니다' });
     }
-    
+
     // 좋아요 제거
     currentUser.likedUsers = currentUser.likedUsers.filter(
       id => !id.equals(targetUserId)
@@ -74,11 +74,54 @@ router.delete('/:userId', authMiddleware, async (req, res, next) => {
     targetUser.likedByUsers = targetUser.likedByUsers.filter(
       id => !id.equals(currentUserId)
     );
-    
+
     await currentUser.save();
     await targetUser.save();
-    
+
     res.json({ success: true, message: '좋아요 취소 완료' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 나를 좋아요한 사람들 목록
+router.get('/received', authMiddleware, async (req, res, next) => {
+  try {
+    const currentUser = await User.findById(req.user.id)
+      .populate('likedByUsers', 'nickname age gender college mbti profileImage aiScore')
+      .lean();
+
+    if (!currentUser) {
+      return res.status(404).json({ error: '사용자를 찾을 수 없습니다' });
+    }
+
+    // 좋아요 받은 사용자 목록에 추가 정보 포함
+    const users = currentUser.likedByUsers.map(user => ({
+      ...user,
+      id: user._id,
+      likesCount: 0, // 필요시 계산 가능
+      isLikedByMe: currentUser.likedUsers.some(id => id.equals(user._id)),
+      isMutual: currentUser.likedUsers.some(id => id.equals(user._id)) // 상호 좋아요 여부
+    }));
+
+    res.json({ success: true, users, count: users.length });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 읽지 않은 좋아요 수 (간단 버전)
+router.get('/count', authMiddleware, async (req, res, next) => {
+  try {
+    const currentUser = await User.findById(req.user.id).select('likedByUsers');
+
+    if (!currentUser) {
+      return res.status(404).json({ error: '사용자를 찾을 수 없습니다' });
+    }
+
+    const count = currentUser.likedByUsers?.length || 0;
+
+    res.json({ success: true, count });
   } catch (error) {
     next(error);
   }

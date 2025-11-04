@@ -7,15 +7,26 @@ import './DiscoveryPage.css';
 const DiscoveryPage = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [likesCount, setLikesCount] = useState(0);
   const [filters, setFilters] = useState({
     sortBy: 'likes'
   });
-  
+
   const navigate = useNavigate();
-  
+
   useEffect(() => {
     fetchUsers();
+    fetchLikesCount();
   }, [filters]);
+
+  const fetchLikesCount = async () => {
+    try {
+      const res = await likesAPI.getLikesCount();
+      setLikesCount(res.data.count);
+    } catch (error) {
+      console.error('좋아요 수 로드 실패:', error);
+    }
+  };
   
   const fetchUsers = async () => {
     try {
@@ -61,6 +72,10 @@ const DiscoveryPage = () => {
       <header className="discovery-header">
         <h1>사용자 탐색</h1>
         <div className="header-buttons">
+          <button onClick={() => navigate('/likes-received')} className="likes-received-btn">
+            💖 받은 좋아요
+            {likesCount > 0 && <span className="notification-badge">{likesCount}</span>}
+          </button>
           <button onClick={() => navigate('/matches')} className="matches-btn">
             매칭 목록
           </button>

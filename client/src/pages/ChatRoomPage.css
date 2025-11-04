@@ -34,6 +34,10 @@
   font-size: 1.3rem;
 }
 
+.connection-status {
+  font-size: 1.2rem;
+}
+
 .messages-container {
   flex: 1;
   overflow-y: auto;
@@ -58,7 +62,9 @@
 .my-message,
 .other-message {
   display: flex;
+  align-items: flex-end;
   margin-bottom: 16px;
+  gap: 8px;
 }
 
 .my-message {
@@ -67,6 +73,16 @@
 
 .other-message {
   justify-content: flex-start;
+}
+
+/* 프로필 사진 */
+.sender-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #667eea;
+  flex-shrink: 0;
 }
 
 .message-content {
@@ -89,14 +105,39 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+/* 발신자 이름 */
+.sender-name {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #667eea;
+  margin-bottom: 4px;
+}
+
 .message-content p {
-  margin: 0 0 4px 0;
+  margin: 0 0 6px 0;
   word-wrap: break-word;
+  line-height: 1.4;
+}
+
+/* 메시지 푸터 (시간 + 읽음 표시) */
+.message-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
 }
 
 .timestamp {
   font-size: 0.75rem;
   opacity: 0.7;
+}
+
+/* 읽음 표시 */
+.read-status {
+  font-size: 0.7rem;
+  opacity: 0.6;
+  font-weight: 600;
 }
 
 .message-input {

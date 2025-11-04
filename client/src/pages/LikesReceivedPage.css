@@ -1,0 +1,131 @@
+.likes-received-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding-bottom: 40px;
+}
+
+.likes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.likes-header h1 {
+  font-size: 1.5rem;
+  color: #333;
+  margin: 0;
+}
+
+.back-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: opacity 0.3s;
+}
+
+.back-btn:hover {
+  opacity: 0.9;
+}
+
+.likes-info {
+  text-align: center;
+  padding: 24px 20px;
+  background: white;
+  margin: 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.likes-info p {
+  margin: 8px 0;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.likes-info .hint {
+  font-size: 0.95rem;
+  color: #667eea;
+  font-weight: 600;
+}
+
+.no-likes {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.no-likes p {
+  font-size: 1.2rem;
+  color: #666;
+  margin: 12px 0;
+}
+
+.goto-profile-btn {
+  margin-top: 24px;
+  padding: 12px 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: opacity 0.3s;
+}
+
+.goto-profile-btn:hover {
+  opacity: 0.9;
+}
+
+.users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.user-card-wrapper {
+  position: relative;
+}
+
+.mutual-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 1.2rem;
+  color: #667eea;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .users-grid {
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+
+  .likes-header h1 {
+    font-size: 1.2rem;
+  }
+}

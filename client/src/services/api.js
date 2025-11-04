@@ -58,7 +58,9 @@ export const usersAPI = {
 
 export const likesAPI = {
   likeUser: (userId) => api.post(`/likes/${userId}`),
-  unlikeUser: (userId) => api.delete(`/likes/${userId}`)
+  unlikeUser: (userId) => api.delete(`/likes/${userId}`),
+  getReceivedLikes: () => api.get('/likes/received'),
+  getLikesCount: () => api.get('/likes/count')
 };
 
 export const matchesAPI = {
