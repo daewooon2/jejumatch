@@ -6,6 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfileCreationPage from './pages/ProfileCreationPage';
+import ProfileViewPage from './pages/ProfileViewPage';
 import DiscoveryPage from './pages/DiscoveryPage';
 import MatchesPage from './pages/MatchesPage';
 import ChatRoomPage from './pages/ChatRoomPage';
@@ -34,7 +35,13 @@ function App() {
               <ProfileCreationPage />
             </ProtectedRoute>
           } />
-          
+
+          <Route path="/profile/:userId" element={
+            <ProtectedRoute>
+              <ProfileViewPage />
+            </ProtectedRoute>
+          } />
+
           <Route path="/matches" element={
             <ProtectedRoute>
               <MatchesPage />

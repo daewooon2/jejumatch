@@ -61,7 +61,15 @@ router.delete('/:matchId', authMiddleware, async (req, res, next) => {
     const userId = req.user.id;
     const matchId = req.params.matchId;
 
-    console.log(`🗑️  [DEBUG] 매칭 취소 요청 - 사용자: ${userId}, Match ID: ${matchId}`);
+    console.log(`🗑️  [DEBUG] 매칭 취소 요청 시작`);
+    console.log(`🗑️  [DEBUG] - 사용자 ID: ${userId} (타입: ${typeof userId})`);
+    console.log(`🗑️  [DEBUG] - Match ID: ${matchId} (타입: ${typeof matchId})`);
+
+    // matchId 유효성 검증
+    if (!matchId || !matchId.match(/^[0-9a-fA-F]{24}$/)) {
+      console.log(`❌ [ERROR] 유효하지 않은 Match ID: ${matchId}`);
+      return res.status(400).json({ error: '유효하지 않은 매칭 ID입니다' });
+    }
 
     // 매칭 검증 (내가 속한 매칭인지)
     const match = await Match.findOne({
@@ -69,12 +77,17 @@ router.delete('/:matchId', authMiddleware, async (req, res, next) => {
       $or: [{ user1: userId }, { user2: userId }]
     });
 
+    console.log(`🗑️  [DEBUG] 매칭 조회 결과:`, match ? '찾음' : '못 찾음');
+
     if (!match) {
+      console.log(`❌ [ERROR] 매칭을 찾을 수 없음 - matchId: ${matchId}, userId: ${userId}`);
       return res.status(404).json({ error: '매칭을 찾을 수 없거나 권한이 없습니다' });
     }
 
     // 상대방 ID 찾기
-    const otherUserId = match.user1.equals(userId) ? match.user2 : match.user1;
+    const otherUserId = match.user1.toString() === userId.toString()
+      ? match.user2
+      : match.user1;
 
     console.log(`🗑️  [DEBUG] 상대방 ID: ${otherUserId}`);
 
@@ -86,32 +99,37 @@ router.delete('/:matchId', authMiddleware, async (req, res, next) => {
     await Match.findByIdAndDelete(matchId);
     console.log(`🗑️  [DEBUG] 매칭 삭제 완료`);
 
-    // 3. (선택사항) User 모델의 likedUsers, likedByUsers에서 상대방 ID 제거
-    // 이렇게 하면 서로 다시 좋아요를 눌러야 매칭이 다시 성립됨
+    // 3. User 모델의 likedUsers, likedByUsers에서 상대방 ID 제거
     const currentUser = await User.findById(userId);
     const otherUser = await User.findById(otherUserId);
 
     if (currentUser && otherUser) {
+      console.log(`🗑️  [DEBUG] 좋아요 배열 정리 시작`);
+
       // 좋아요 배열에서 상대방 제거
       currentUser.likedUsers = currentUser.likedUsers.filter(
-        id => !id.equals(otherUserId)
+        id => id.toString() !== otherUserId.toString()
       );
       otherUser.likedByUsers = otherUser.likedByUsers.filter(
-        id => !id.equals(userId)
+        id => id.toString() !== userId.toString()
       );
 
       otherUser.likedUsers = otherUser.likedUsers.filter(
-        id => !id.equals(userId)
+        id => id.toString() !== userId.toString()
       );
       currentUser.likedByUsers = currentUser.likedByUsers.filter(
-        id => !id.equals(otherUserId)
+        id => id.toString() !== otherUserId.toString()
       );
 
       await currentUser.save();
       await otherUser.save();
 
       console.log(`🗑️  [DEBUG] 좋아요 배열에서 상호 제거 완료`);
+    } else {
+      console.log(`⚠️  [WARN] 사용자를 찾을 수 없음 - currentUser: ${!!currentUser}, otherUser: ${!!otherUser}`);
     }
+
+    console.log(`✅ [SUCCESS] 매칭 취소 완료`);
 
     res.json({
       success: true,
@@ -119,7 +137,11 @@ router.delete('/:matchId', authMiddleware, async (req, res, next) => {
     });
   } catch (error) {
     console.error('❌ [ERROR] 매칭 취소 실패:', error);
-    next(error);
+    console.error('❌ [ERROR] 에러 스택:', error.stack);
+    res.status(500).json({
+      error: '매칭 취소 중 오류가 발생했습니다',
+      details: error.message
+    });
   }
 });
 

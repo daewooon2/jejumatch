@@ -10,31 +10,54 @@ const router = express.Router();
 // 나를 좋아요한 사람들 목록
 router.get('/received', authMiddleware, async (req, res, next) => {
   try {
+    console.log(`📊 [DEBUG] 받은 좋아요 조회 시작 - 사용자: ${req.user.id}`);
+
     const currentUser = await User.findById(req.user.id)
-      .populate('likedByUsers', 'nickname age gender college mbti profileImage aiScore')
-      .lean();
+      .populate('likedByUsers', 'nickname age gender college mbti profileImage aiScore likedByUsers')
+      .populate('likedUsers');
 
     if (!currentUser) {
+      console.log(`❌ [ERROR] 사용자를 찾을 수 없음: ${req.user.id}`);
       return res.status(404).json({ error: '사용자를 찾을 수 없습니다' });
     }
 
-    console.log(`📊 [DEBUG] 받은 좋아요 조회 - 사용자: ${req.user.id}`);
+    console.log(`📊 [DEBUG] currentUser 찾음: ${currentUser.nickname}`);
     console.log(`📊 [DEBUG] likedByUsers 수: ${currentUser.likedByUsers?.length || 0}`);
+    console.log(`📊 [DEBUG] likedByUsers IDs:`, currentUser.likedByUsers?.map(u => u._id || u));
 
     // 좋아요 받은 사용자 목록에 추가 정보 포함
-    const users = currentUser.likedByUsers.map(user => ({
-      ...user,
-      id: user._id,
-      likesCount: 0, // 필요시 계산 가능
-      isLikedByMe: currentUser.likedUsers.some(id => id.equals(user._id)),
-      isMutual: currentUser.likedUsers.some(id => id.equals(user._id)) // 상호 좋아요 여부
-    }));
+    const users = (currentUser.likedByUsers || []).map(user => {
+      // user가 ObjectId인 경우와 객체인 경우 모두 처리
+      const userId = user._id || user;
+      const isLikedByMe = currentUser.likedUsers.some(id => {
+        const likedId = id._id || id;
+        return likedId.toString() === userId.toString();
+      });
 
-    console.log(`📊 [DEBUG] 응답 데이터:`, users.map(u => u.nickname));
+      console.log(`📊 [DEBUG] 처리 중: ${user.nickname || userId}, isLikedByMe: ${isLikedByMe}`);
+
+      return {
+        _id: userId,
+        id: userId,
+        nickname: user.nickname,
+        age: user.age,
+        gender: user.gender,
+        college: user.college,
+        mbti: user.mbti,
+        profileImage: user.profileImage,
+        aiScore: user.aiScore,
+        likesCount: user.likedByUsers?.length || 0,
+        isLikedByMe,
+        isMutual: isLikedByMe // 상호 좋아요 여부
+      };
+    });
+
+    console.log(`📊 [DEBUG] 응답 데이터 (${users.length}명):`, users.map(u => u.nickname));
 
     res.json({ success: true, users, count: users.length });
   } catch (error) {
     console.error('❌ [ERROR] 받은 좋아요 조회 실패:', error);
+    console.error('❌ [ERROR] 에러 스택:', error.stack);
     next(error);
   }
 });

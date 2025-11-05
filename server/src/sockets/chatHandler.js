@@ -43,22 +43,27 @@ const chatHandler = (io) => {
     socket.on('send-message', async (data) => {
       try {
         const { matchId, text } = data;
-        
+
+        console.log(`📨 메시지 수신 - userId: ${socket.userId}, matchId: ${matchId}, text: ${text}`);
+
         // 매칭 검증
         const match = await Match.findOne({
           _id: matchId,
           $or: [{ user1: socket.userId }, { user2: socket.userId }]
         });
-        
+
         if (!match) {
+          console.log(`❌ 접근 권한 없음 - userId: ${socket.userId}, matchId: ${matchId}`);
           return socket.emit('error', '접근 권한 없음');
         }
-        
+
         // 수신자 확인
-        const receiverId = match.user1.equals(socket.userId) 
-          ? match.user2 
+        const receiverId = match.user1.equals(socket.userId)
+          ? match.user2
           : match.user1;
-        
+
+        console.log(`💾 메시지 저장 중 - sender: ${socket.userId}, receiver: ${receiverId}`);
+
         // 메시지 저장
         const message = await Message.create({
           matchId,
@@ -66,13 +71,16 @@ const chatHandler = (io) => {
           receiver: receiverId,
           text
         });
-        
+
         await message.populate('sender', 'nickname profileImage');
-        
+
+        console.log(`📤 메시지 브로드캐스트 - matchId: ${matchId}`, message);
+
         // 같은 채팅방의 모든 클라이언트에게 전송
         io.to(matchId).emit('new-message', message);
-        
+
       } catch (error) {
+        console.error('❌ 메시지 전송 실패:', error);
         socket.emit('error', '메시지 전송 실패');
       }
     });

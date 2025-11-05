@@ -65,21 +65,25 @@ const ChatRoomPage = () => {
 
     if (!inputText.trim()) return;
 
-    try {
-      // REST API로 메시지 전송 (DB 저장)
-      const res = await messagesAPI.sendMessage(matchId, inputText);
+    const messageText = inputText;
+    setInputText(''); // 입력창 즉시 비우기
 
-      // Socket.io로 실시간 전송 (상대방에게 즉시 알림)
+    try {
+      // Socket.io로 실시간 전송 (소켓 핸들러에서 DB 저장 및 브로드캐스트)
       if (connected) {
-        sendSocketMessage(matchId, inputText);
+        console.log('📤 소켓으로 메시지 전송:', messageText);
+        sendSocketMessage(matchId, messageText);
       } else {
-        // Socket 연결 안 되어 있으면 수동으로 추가
+        // Socket 연결 안 되어 있으면 REST API 폴백
+        console.log('📤 REST API로 메시지 전송:', messageText);
+        const res = await messagesAPI.sendMessage(matchId, messageText);
+        // 수동으로 메시지 추가
         setMessages([...messages, res.data.message]);
       }
-
-      setInputText('');
     } catch (error) {
+      console.error('❌ 메시지 전송 실패:', error);
       alert('메시지 전송 실패');
+      setInputText(messageText); // 실패 시 메시지 복구
     }
   };
 

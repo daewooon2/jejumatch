@@ -33,15 +33,25 @@ router.get('/', authMiddleware, async (req, res, next) => {
       .select('-password -email -likedUsers')
       .lean();
 
+    console.log(`👥 [DEBUG] 조회된 사용자 수: ${users.length}`);
+    if (users.length > 0) {
+      console.log(`👥 [DEBUG] 첫 번째 사용자 likedByUsers:`, users[0].likedByUsers);
+    }
+
     // 좋아요 수 및 내가 좋아요 했는지 추가
-    users = users.map(user => ({
-      ...user,
-      id: user._id,
-      likesCount: user.likedByUsers?.length || 0,
-      isLikedByMe: currentUser.likedUsers.some(id => id.equals(user._id)),
-      // 보안: likedByUsers 배열은 클라이언트에 전송하지 않음
-      likedByUsers: undefined
-    }));
+    users = users.map(user => {
+      const likesCount = user.likedByUsers?.length || 0;
+      console.log(`👥 [DEBUG] ${user.nickname}: likesCount = ${likesCount}`);
+
+      return {
+        ...user,
+        id: user._id,
+        likesCount,
+        isLikedByMe: currentUser.likedUsers.some(id => id.equals(user._id)),
+        // 보안: likedByUsers 배열은 클라이언트에 전송하지 않음
+        likedByUsers: undefined
+      };
+    });
     
     // 정렬
     const sortBy = req.query.sortBy || 'likes';
