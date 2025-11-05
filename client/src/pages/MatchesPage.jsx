@@ -33,13 +33,20 @@ const MatchesPage = () => {
     }
 
     try {
-      await matchesAPI.deleteMatch(matchId);
+      console.log('🗑️ 매칭 취소 시도:', matchId);
+      const response = await matchesAPI.deleteMatch(matchId);
+      console.log('✅ 매칭 취소 성공:', response.data);
       alert('매칭이 취소되었습니다');
 
       // UI에서 제거
       setMatches(matches.filter(match => match.matchId !== matchId));
     } catch (error) {
-      console.error('매칭 취소 실패:', error);
+      console.error('❌ 매칭 취소 실패:', error);
+      console.error('에러 상세:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
       alert(error.response?.data?.error || '매칭 취소에 실패했습니다');
     }
   };
