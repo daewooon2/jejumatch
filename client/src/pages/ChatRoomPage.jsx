@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { messagesAPI } from '../services/api';
+import { messagesAPI, matchesAPI } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import { useSocket } from '../hooks/useSocket';
 import './ChatRoomPage.css';
@@ -96,6 +96,24 @@ const ChatRoomPage = () => {
     const API_BASE = process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000';
     return `${API_BASE}${profileImage}`;
   };
+
+  // 매칭 취소
+  const handleCancelMatch = async () => {
+    const confirmMessage = `정말로 ${otherUser?.nickname || '상대방'}님과의 매칭을 취소하시겠습니까?\n\n⚠️ 주의:\n- 모든 채팅 메시지가 삭제됩니다\n- 다시 매칭하려면 서로 다시 좋아요를 눌러야 합니다\n- 이 작업은 되돌릴 수 없습니다`;
+
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      await matchesAPI.deleteMatch(matchId);
+      alert('매칭이 취소되었습니다');
+      navigate('/matches');
+    } catch (error) {
+      console.error('매칭 취소 실패:', error);
+      alert(error.response?.data?.error || '매칭 취소에 실패했습니다');
+    }
+  };
   
   if (loading) {
     return <div className="loading">로딩 중...</div>;
@@ -106,8 +124,17 @@ const ChatRoomPage = () => {
       <div className="chat-header">
         <button onClick={() => navigate('/matches')}>← 뒤로</button>
         <h3>{otherUser?.nickname || '채팅방'}</h3>
-        <div className="connection-status">
-          {connected ? '🟢' : '🔴'}
+        <div className="header-right">
+          <div className="connection-status" title={connected ? '연결됨' : '연결 끊김'}>
+            {connected ? '🟢' : '🔴'}
+          </div>
+          <button
+            onClick={handleCancelMatch}
+            className="cancel-match-btn-header"
+            title="매칭 취소"
+          >
+            ✕
+          </button>
         </div>
       </div>
 

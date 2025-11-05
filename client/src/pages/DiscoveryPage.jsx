@@ -43,20 +43,18 @@ const DiscoveryPage = () => {
   const handleLike = async (userId) => {
     try {
       const res = await likesAPI.likeUser(userId);
-      
-      // UI 업데이트
-      setUsers(users.map(user => 
-        (user.id === userId || user._id === userId)
-          ? { ...user, isLikedByMe: true, likesCount: (user.likesCount || 0) + 1 }
-          : user
-      ));
-      
+
       // 매칭 성공 시
       if (res.data.isMatched) {
         alert('🎉 매칭 성공! 채팅을 시작할 수 있습니다.');
         navigate(`/chat/${res.data.matchId}`);
       } else {
         alert('좋아요를 보냈습니다! 💌');
+
+        // 좋아요 후 사용자 목록 새로고침 (실시간 likesCount 반영)
+        console.log('🔄 좋아요 후 목록 새로고침');
+        await fetchUsers();
+        await fetchLikesCount();
       }
     } catch (error) {
       alert(error.response?.data?.error || '좋아요 실패');

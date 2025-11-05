@@ -64,7 +64,8 @@ export const likesAPI = {
 };
 
 export const matchesAPI = {
-  getMatches: () => api.get('/matches')
+  getMatches: () => api.get('/matches'),
+  deleteMatch: (matchId) => api.delete(`/matches/${matchId}`)
 };
 
 export const messagesAPI = {

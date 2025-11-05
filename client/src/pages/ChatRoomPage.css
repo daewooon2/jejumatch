@@ -34,8 +34,34 @@
   font-size: 1.3rem;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .connection-status {
   font-size: 1.2rem;
+  cursor: help;
+}
+
+.cancel-match-btn-header {
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 68, 68, 0.9);
+  color: white;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+
+.cancel-match-btn-header:hover {
+  background: #cc0000;
+  transform: scale(1.1);
 }
 
 .messages-container {
