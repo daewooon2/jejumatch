@@ -44,6 +44,7 @@
   align-items: center;
   gap: 16px;
   padding: 16px;
+  padding-right: 56px; /* 취소 버튼 공간 확보 */
   background: #f9f9f9;
   border-radius: 12px;
   cursor: pointer;
@@ -83,12 +84,16 @@
 }
 
 .unread-badge {
+  position: absolute;
+  bottom: 12px;
+  right: 56px; /* 취소 버튼 왼쪽에 배치 */
   background: #ff6b6b;
   color: white;
   padding: 4px 10px;
   border-radius: 12px;
   font-size: 0.85rem;
   font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .cancel-match-btn {

@@ -26,15 +26,31 @@ const ChatRoomPage = () => {
   // Socket.io 실시간 메시지 수신
   useEffect(() => {
     if (connected && matchId) {
+      console.log('🔌 소켓 연결됨, 매칭방 참가:', matchId);
       joinMatch(matchId);
 
-      // 새 메시지 수신 리스너
-      onNewMessage((newMessage) => {
+      // 새 메시지 수신 리스너 등록
+      const handleNewMessage = (newMessage) => {
         console.log('📩 새 메시지 수신:', newMessage);
-        setMessages((prev) => [...prev, newMessage]);
-      });
+        setMessages((prev) => {
+          // 중복 메시지 방지
+          const exists = prev.some(msg => msg._id === newMessage._id);
+          if (exists) {
+            console.log('⚠️  중복 메시지, 무시');
+            return prev;
+          }
+          console.log('✅ 메시지 추가');
+          return [...prev, newMessage];
+        });
+      };
+
+      onNewMessage(handleNewMessage);
+
+      // 클린업 함수는 useSocket에서 처리하지 않으므로 여기서는 생략
+    } else {
+      console.log('⚠️  소켓 연결 안 됨 또는 matchId 없음', { connected, matchId });
     }
-  }, [connected, matchId]);
+  }, [connected, matchId, joinMatch, onNewMessage]);
 
   // 메시지 업데이트 시 스크롤
   useEffect(() => {
@@ -44,15 +60,41 @@ const ChatRoomPage = () => {
   const fetchMessages = async () => {
     try {
       const res = await messagesAPI.getMessages(matchId);
+      console.log('📨 메시지 로드:', res.data.messages.length, '개');
       setMessages(res.data.messages);
 
       // 상대방 정보 추출 (첫 메시지에서)
       if (res.data.messages.length > 0) {
+        const currentUserId = user.id || user._id;
         const firstMsg = res.data.messages[0];
-        const other = firstMsg.sender._id === user.id ? null : firstMsg.sender;
+        const senderId = firstMsg.sender._id || firstMsg.sender;
+
+        console.log('👤 상대방 찾기:', {
+          currentUserId,
+          firstMsgSenderId: senderId,
+          isSameUser: senderId.toString() === currentUserId.toString()
+        });
+
+        // 내가 아닌 사람을 찾을 때까지 메시지를 순회
+        let other = null;
+        for (const msg of res.data.messages) {
+          const msgSenderId = msg.sender._id || msg.sender;
+          if (msgSenderId.toString() !== currentUserId.toString()) {
+            other = msg.sender;
+            break;
+          }
+        }
+
+        // 상대방을 찾지 못했다면 첫 메시지 발신자가 나라면 수신자가 상대방
+        if (!other && res.data.messages[0].receiver) {
+          other = res.data.messages[0].receiver;
+        }
+
+        console.log('👤 상대방:', other?.nickname || '없음');
         setOtherUser(other);
       }
     } catch (error) {
+      console.error('❌ 메시지 로드 실패:', error);
       alert('메시지를 불러올 수 없습니다');
       navigate('/matches');
     } finally {
@@ -157,7 +199,18 @@ const ChatRoomPage = () => {
           </div>
         ) : (
           messages.map((msg) => {
-            const isMyMessage = msg.sender._id === user.id;
+            // user.id 또는 user._id 둘 다 처리
+            const currentUserId = user.id || user._id;
+            const senderId = msg.sender._id || msg.sender;
+            const isMyMessage = senderId.toString() === currentUserId.toString();
+
+            console.log('💬 메시지 렌더링:', {
+              messageId: msg._id,
+              senderId,
+              currentUserId,
+              isMyMessage,
+              senderName: msg.sender.nickname
+            });
 
             return (
               <div
