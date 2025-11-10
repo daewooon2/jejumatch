@@ -161,9 +161,20 @@
 
 /* 읽음 표시 */
 .read-status {
-  font-size: 0.7rem;
-  opacity: 0.6;
+  font-size: 0.75rem;
   font-weight: 600;
+}
+
+/* 읽음 (파란색) */
+.my-message .message-content .read-status {
+  color: #4facfe;
+  opacity: 0.9;
+}
+
+/* 안읽음 (회색) */
+.my-message .message-content .read-status.unread {
+  color: #d0d0d0;
+  opacity: 0.7;
 }
 
 .message-input {

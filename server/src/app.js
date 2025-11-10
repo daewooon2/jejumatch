@@ -9,6 +9,7 @@ const usersRoutes = require('./routes/users.routes');
 const likesRoutes = require('./routes/likes.routes');
 const matchesRoutes = require('./routes/matches.routes');
 const messagesRoutes = require('./routes/messages.routes');
+const storyRoutes = require('./routes/story.routes');
 
 // 미들웨어 import
 const errorHandler = require('./middlewares/errorHandler');
@@ -30,6 +31,7 @@ app.use('/api/users', usersRoutes);
 app.use('/api/likes', likesRoutes);
 app.use('/api/matches', matchesRoutes);
 app.use('/api/messages', messagesRoutes);
+app.use('/api/stories', storyRoutes);
 
 // 헬스 체크
 app.get('/health', (req, res) => {

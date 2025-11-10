@@ -86,10 +86,33 @@ export const useSocket = () => {
     }
   }, []);
 
+  const markAsRead = useCallback((matchId, messageIds) => {
+    if (socketRef.current && connected) {
+      console.log('📖 메시지 읽음 처리 요청:', { matchId, messageIds });
+      socketRef.current.emit('mark-as-read', { matchId, messageIds });
+    } else {
+      console.log('⚠️  소켓 연결 안 됨, 읽음 처리 불가');
+    }
+  }, [connected]);
+
+  const onMessagesRead = useCallback((callback) => {
+    if (socketRef.current) {
+      console.log('👂 messages-read 리스너 등록');
+      // 기존 리스너 제거 (중복 방지)
+      socketRef.current.off('messages-read');
+      // 새 리스너 등록
+      socketRef.current.on('messages-read', callback);
+    } else {
+      console.log('⚠️  소켓 없음, 리스너 등록 불가');
+    }
+  }, []);
+
   return {
     connected,
     joinMatch,
     sendMessage,
-    onNewMessage
+    onNewMessage,
+    markAsRead,
+    onMessagesRead
   };
 };

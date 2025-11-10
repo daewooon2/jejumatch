@@ -94,3 +94,14 @@ export const messagesAPI = {
   getMessages: (matchId) => api.get(`/messages/${matchId}`),
   sendMessage: (matchId, text) => api.post(`/messages/${matchId}`, { text })
 };
+
+export const storyAPI = {
+  getStories: () => api.get('/stories'),
+  getUserStories: (userId) => api.get(`/stories/${userId}`),
+  uploadStory: (formData) => api.post('/stories', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  viewStory: (storyId) => api.put(`/stories/${storyId}/view`),
+  deleteStory: (storyId) => api.delete(`/stories/${storyId}`),
+  getViewers: (storyId) => api.get(`/stories/${storyId}/viewers`)
+};

@@ -85,6 +85,51 @@ const chatHandler = (io) => {
       }
     });
     
+    // 메시지 읽음 처리
+    socket.on('mark-as-read', async (data) => {
+      try {
+        const { matchId, messageIds } = data;
+
+        console.log(`📖 메시지 읽음 처리 - userId: ${socket.userId}, matchId: ${matchId}, messageIds:`, messageIds);
+
+        // 매칭 검증
+        const match = await Match.findOne({
+          _id: matchId,
+          $or: [{ user1: socket.userId }, { user2: socket.userId }]
+        });
+
+        if (!match) {
+          console.log(`❌ 접근 권한 없음 - userId: ${socket.userId}, matchId: ${matchId}`);
+          return socket.emit('error', '접근 권한 없음');
+        }
+
+        // 메시지들을 읽음 처리 (내가 수신자인 메시지만)
+        const result = await Message.updateMany(
+          {
+            _id: { $in: messageIds },
+            receiver: socket.userId,
+            isRead: false
+          },
+          {
+            $set: { isRead: true, readAt: new Date() }
+          }
+        );
+
+        console.log(`📖 읽음 처리 완료 - 업데이트된 메시지 수: ${result.modifiedCount}`);
+
+        // 같은 채팅방의 모든 클라이언트에게 읽음 알림 전송
+        io.to(matchId).emit('messages-read', {
+          messageIds,
+          readBy: socket.userId,
+          readAt: new Date()
+        });
+
+      } catch (error) {
+        console.error('❌ 메시지 읽음 처리 실패:', error);
+        socket.emit('error', '메시지 읽음 처리 실패');
+      }
+    });
+
     // 연결 해제
     socket.on('disconnect', () => {
       console.log('❌ 사용자 연결 해제:', socket.id);

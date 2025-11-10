@@ -9,7 +9,7 @@ const ChatRoomPage = () => {
   const { matchId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { connected, joinMatch, sendMessage: sendSocketMessage, onNewMessage } = useSocket();
+  const { connected, joinMatch, sendMessage: sendSocketMessage, onNewMessage, markAsRead, onMessagesRead } = useSocket();
 
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
@@ -23,7 +23,7 @@ const ChatRoomPage = () => {
     fetchMessages();
   }, [matchId]);
 
-  // Socket.io 실시간 메시지 수신
+  // Socket.io 실시간 메시지 수신 및 읽음 처리
   useEffect(() => {
     if (connected && matchId) {
       console.log('🔌 소켓 연결됨, 매칭방 참가:', matchId);
@@ -40,17 +40,59 @@ const ChatRoomPage = () => {
             return prev;
           }
           console.log('✅ 메시지 추가');
+
+          // 상대방이 보낸 메시지면 즉시 읽음 처리
+          const currentUserId = user.id || user._id;
+          const senderId = newMessage.sender._id || newMessage.sender;
+          const isOtherMessage = senderId.toString() !== currentUserId.toString();
+
+          if (isOtherMessage && !newMessage.isRead) {
+            console.log('📖 새 메시지 읽음 처리:', newMessage._id);
+            markAsRead(matchId, [newMessage._id]);
+          }
+
           return [...prev, newMessage];
         });
       };
 
+      // 읽음 상태 업데이트 리스너 등록
+      const handleMessagesRead = ({ messageIds }) => {
+        console.log('📖 메시지 읽음 알림 수신:', messageIds);
+        setMessages((prev) =>
+          prev.map((msg) =>
+            messageIds.includes(msg._id)
+              ? { ...msg, isRead: true }
+              : msg
+          )
+        );
+      };
+
       onNewMessage(handleNewMessage);
+      onMessagesRead(handleMessagesRead);
+
+      // 채팅방 입장 시 안 읽은 메시지 모두 읽음 처리
+      setMessages((prev) => {
+        const currentUserId = user.id || user._id;
+        const unreadMessages = prev.filter(msg => {
+          const senderId = msg.sender._id || msg.sender;
+          const isOtherMessage = senderId.toString() !== currentUserId.toString();
+          return isOtherMessage && !msg.isRead;
+        });
+
+        if (unreadMessages.length > 0) {
+          const unreadIds = unreadMessages.map(msg => msg._id);
+          console.log('📖 채팅방 입장 시 안 읽은 메시지 읽음 처리:', unreadIds);
+          markAsRead(matchId, unreadIds);
+        }
+
+        return prev;
+      });
 
       // 클린업 함수는 useSocket에서 처리하지 않으므로 여기서는 생략
     } else {
       console.log('⚠️  소켓 연결 안 됨 또는 matchId 없음', { connected, matchId });
     }
-  }, [connected, matchId, joinMatch, onNewMessage]);
+  }, [connected, matchId, joinMatch, onNewMessage, onMessagesRead, markAsRead, user]);
 
   // 메시지 업데이트 시 스크롤
   useEffect(() => {
@@ -244,8 +286,8 @@ const ChatRoomPage = () => {
                     </span>
                     {/* 내 메시지: 읽음 표시 */}
                     {isMyMessage && (
-                      <span className="read-status">
-                        {msg.isRead ? '읽음' : '안읽음'}
+                      <span className={`read-status ${!msg.isRead ? 'unread' : ''}`}>
+                        {msg.isRead ? '✓✓' : '✓'}
                       </span>
                     )}
                   </div>
