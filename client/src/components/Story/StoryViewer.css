@@ -1,0 +1,180 @@
+.story-viewer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #000;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 헤더 */
+.story-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+}
+
+.story-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.story-user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid white;
+  object-fit: cover;
+}
+
+.story-user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.story-user-name {
+  color: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.story-time {
+  color: rgba(255,255,255,0.8);
+  font-size: 0.8rem;
+}
+
+.story-close-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  color: white;
+  font-size: 2rem;
+  font-weight: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: none;
+}
+
+.story-close-btn:hover {
+  background: rgba(255,255,255,0.3);
+  transform: scale(1.1);
+}
+
+/* 프로그레스 바 */
+.story-progress-bars {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9;
+}
+
+.progress-bar-container {
+  flex: 1;
+  height: 3px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: white;
+  transition: width 0.1s linear;
+}
+
+/* 스토리 콘텐츠 */
+.story-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.story-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  user-select: none;
+}
+
+.story-caption {
+  position: absolute;
+  bottom: 40px;
+  left: 20px;
+  right: 20px;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  backdrop-filter: blur(10px);
+}
+
+/* 네비게이션 */
+.story-navigation {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+}
+
+.nav-left,
+.nav-right {
+  flex: 1;
+  cursor: pointer;
+  z-index: 5;
+  user-select: none;
+}
+
+.nav-left:active,
+.nav-right:active {
+  background: rgba(255,255,255,0.05);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 600px) {
+  .story-header {
+    padding: 12px 16px;
+  }
+
+  .story-user-avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .story-caption {
+    bottom: 20px;
+    font-size: 0.85rem;
+  }
+}

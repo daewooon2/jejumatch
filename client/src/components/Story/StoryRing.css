@@ -1,0 +1,63 @@
+.story-ring-container {
+  position: relative;
+  display: inline-block;
+}
+
+.story-ring {
+  border-radius: 50%;
+  padding: 3px;
+  background: #c7c7c7; /* 기본 회색 (스토리 없음 or 모두 봄) */
+  transition: all 0.3s;
+}
+
+/* 스토리가 있고 안본 것이 있으면 그라데이션 */
+.story-ring-container.has-story.unviewed .story-ring {
+  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+  animation: pulse 2s infinite;
+}
+
+/* 스토리가 있지만 모두 봤으면 회색 */
+.story-ring-container.has-story:not(.unviewed) .story-ring {
+  background: #c7c7c7;
+}
+
+.story-profile-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid white;
+  display: block;
+}
+
+.story-plus-icon {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border: 2px solid white;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.story-plus-icon:hover {
+  transform: scale(1.1);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(240, 148, 51, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(240, 148, 51, 0);
+  }
+}
