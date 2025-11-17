@@ -1,15 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { matchesAPI } from '../services/api';
+import { matchesAPI, storyAPI } from '../services/api';
+import { useAuth } from '../hooks/useAuth';
+import StoryViewer from '../components/Story/StoryViewer';
+import StoryUpload from '../components/Story/StoryUpload';
 import './MatchesPage.css';
 
 const MatchesPage = () => {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [stories, setStories] = useState([]);
+  const [showUpload, setShowUpload] = useState(false);
+  const [viewingStories, setViewingStories] = useState(null);
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchMatches();
+    fetchStories();
   }, []);
 
   const fetchMatches = async () => {
@@ -21,6 +29,19 @@ const MatchesPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchStories = async () => {
+    try {
+      const res = await storyAPI.getStories();
+      setStories(res.data.stories || []);
+    } catch (error) {
+      console.error('스토리 로드 실패:', error);
+    }
+  };
+
+  const openStoryViewer = (storyList) => {
+    setViewingStories(storyList);
   };
 
   const handleCancelMatch = async (matchId, matchedUserName, e) => {
@@ -57,6 +78,24 @@ const MatchesPage = () => {
   
   const API_BASE = process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000';
   
+  const getImageUrl = (profileImage) => {
+    if (!profileImage) return '/default-avatar.png';
+    if (profileImage.startsWith('http://') || profileImage.startsWith('https://')) {
+      return profileImage;
+    }
+    const API_BASE = process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000';
+    return `${API_BASE}${profileImage}`;
+  };
+
+  const formatTime = (date) => {
+    const now = new Date();
+    const diff = Math.floor((now - new Date(date)) / 1000);
+    if (diff < 60) return `${diff}초 전`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`;
+    return `${Math.floor(diff / 86400)}일 전`;
+  };
+
   return (
     <div className="matches-page">
       <header className="matches-header">
@@ -64,7 +103,45 @@ const MatchesPage = () => {
         <h1>매칭 목록</h1>
         <div></div>
       </header>
-      
+
+      {/* 스토리 섹션 */}
+      {!loading && (
+        <div className="stories-section">
+          <h2>스토리</h2>
+          <div className="stories-grid">
+            {/* 내 스토리 추가 버튼 */}
+            <div className="story-card add-story-card" onClick={() => setShowUpload(true)}>
+              <div className="story-thumbnail add-thumbnail">
+                <span>+</span>
+              </div>
+              <p className="story-user-name">내 스토리</p>
+            </div>
+
+            {/* 친구들 스토리 */}
+            {stories.map((storyGroup) => (
+              <div
+                key={storyGroup.user._id}
+                className="story-card"
+                onClick={() => openStoryViewer(storyGroup.stories)}
+              >
+                <div className="story-thumbnail">
+                  <img
+                    src={getImageUrl(storyGroup.stories[0].imageUrl)}
+                    alt={storyGroup.user.nickname}
+                    onError={(e) => (e.target.src = '/default-avatar.png')}
+                  />
+                  {storyGroup.hasUnviewed && (
+                    <span className="new-badge">NEW</span>
+                  )}
+                </div>
+                <p className="story-user-name">{storyGroup.user.nickname}</p>
+                <p className="story-time">{formatTime(storyGroup.stories[0].createdAt)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="matches-list">
         {matches.length === 0 ? (
           <div className="no-matches">
@@ -73,15 +150,6 @@ const MatchesPage = () => {
           </div>
         ) : (
           matches.map(match => {
-            // Cloudinary URL 지원
-            const getImageUrl = (profileImage) => {
-              if (!profileImage) return '/default-avatar.png';
-              if (profileImage.startsWith('http://') || profileImage.startsWith('https://')) {
-                return profileImage;
-              }
-              return `${API_BASE}${profileImage}`;
-            };
-
             return (
               <div
                 key={match.matchId}
@@ -116,6 +184,25 @@ const MatchesPage = () => {
           })
         )}
       </div>
+
+      {/* 스토리 업로드 모달 */}
+      {showUpload && (
+        <StoryUpload
+          onClose={() => setShowUpload(false)}
+          onSuccess={() => {
+            setShowUpload(false);
+            fetchStories();
+          }}
+        />
+      )}
+
+      {/* 스토리 뷰어 */}
+      {viewingStories && (
+        <StoryViewer
+          stories={viewingStories}
+          onClose={() => setViewingStories(null)}
+        />
+      )}
     </div>
   );
 };

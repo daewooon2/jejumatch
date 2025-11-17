@@ -10,7 +10,7 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose }) => {
   const startTimeRef = useRef(null);
   const pausedTimeRef = useRef(0);
 
-  const STORY_DURATION = 3000; // 3초
+  const STORY_DURATION = 5000; // 5초
 
   const currentStory = stories[currentIndex];
 
@@ -22,6 +22,22 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose }) => {
       console.error('스토리 조회 기록 실패:', err)
     );
   }, [currentStory]);
+
+  // ESC 키로 닫기, 화살표 키로 이동
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      } else if (e.key === 'ArrowLeft') {
+        prevStory();
+      } else if (e.key === 'ArrowRight') {
+        nextStory();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentIndex]);
 
   useEffect(() => {
     if (isPaused) return;
@@ -149,7 +165,7 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose }) => {
         )}
       </div>
 
-      {/* 네비게이션 (좌우 클릭) */}
+      {/* 네비게이션 (좌우 클릭 + 화살표 버튼) */}
       <div className="story-navigation">
         <div
           className="nav-left"
@@ -159,7 +175,13 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose }) => {
           onMouseDown={handlePause}
           onMouseUp={handleResume}
           onMouseLeave={handleResume}
-        />
+        >
+          {currentIndex > 0 && (
+            <button className="arrow-btn arrow-left">
+              ←
+            </button>
+          )}
+        </div>
         <div
           className="nav-right"
           onClick={nextStory}
@@ -168,7 +190,13 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose }) => {
           onMouseDown={handlePause}
           onMouseUp={handleResume}
           onMouseLeave={handleResume}
-        />
+        >
+          {currentIndex < stories.length - 1 && (
+            <button className="arrow-btn arrow-right">
+              →
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

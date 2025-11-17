@@ -155,11 +155,46 @@
   cursor: pointer;
   z-index: 5;
   user-select: none;
+  display: flex;
+  align-items: center;
+}
+
+.nav-left {
+  justify-content: flex-start;
+  padding-left: 20px;
+}
+
+.nav-right {
+  justify-content: flex-end;
+  padding-right: 20px;
 }
 
 .nav-left:active,
 .nav-right:active {
   background: rgba(255,255,255,0.05);
+}
+
+/* 화살표 버튼 */
+.arrow-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.5);
+  color: white;
+  font-size: 1.5rem;
+  border: 2px solid rgba(255,255,255,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  backdrop-filter: blur(10px);
+}
+
+.arrow-btn:hover {
+  background: rgba(0,0,0,0.7);
+  border-color: rgba(255,255,255,0.6);
+  transform: scale(1.1);
 }
 
 /* 반응형 디자인 */
