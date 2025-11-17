@@ -14,7 +14,7 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res, next) 
     }
 
     const { caption } = req.body;
-    const imageUrl = req.file.path; // Cloudinary URL
+    const imageUrl = `/uploads/${req.file.filename}`; // 로컬 경로
 
     console.log(`📸 스토리 업로드 - 사용자: ${req.user.id}, 이미지: ${imageUrl}`);
 
