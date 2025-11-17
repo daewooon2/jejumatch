@@ -103,5 +103,9 @@ export const storyAPI = {
   }),
   viewStory: (storyId) => api.put(`/stories/${storyId}/view`),
   deleteStory: (storyId) => api.delete(`/stories/${storyId}`),
-  getViewers: (storyId) => api.get(`/stories/${storyId}/viewers`)
+  getViewers: (storyId) => api.get(`/stories/${storyId}/viewers`),
+  likeStory: (storyId) => api.post(`/stories/${storyId}/like`),
+  unlikeStory: (storyId) => api.delete(`/stories/${storyId}/like`),
+  addComment: (storyId, text) => api.post(`/stories/${storyId}/comments`, { text }),
+  deleteComment: (storyId, commentId) => api.delete(`/stories/${storyId}/comments/${commentId}`)
 };

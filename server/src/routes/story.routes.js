@@ -246,4 +246,162 @@ router.get('/:storyId/viewers', authMiddleware, async (req, res, next) => {
   }
 });
 
+// 스토리 좋아요
+router.post('/:storyId/like', authMiddleware, async (req, res, next) => {
+  try {
+    const storyId = req.params.storyId;
+    const userId = req.user.id;
+
+    console.log(`❤️  스토리 좋아요 - 사용자: ${userId}, 스토리: ${storyId}`);
+
+    const story = await Story.findById(storyId);
+
+    if (!story) {
+      return res.status(404).json({ error: '스토리를 찾을 수 없습니다' });
+    }
+
+    // 이미 좋아요했는지 확인
+    const alreadyLiked = story.likes.some(id => id.toString() === userId);
+
+    if (alreadyLiked) {
+      return res.status(400).json({ error: '이미 좋아요한 스토리입니다' });
+    }
+
+    story.likes.push(userId);
+    await story.save();
+
+    console.log(`✅ 좋아요 추가 - 총 좋아요: ${story.likes.length}개`);
+
+    res.json({
+      success: true,
+      message: '좋아요를 눌렀습니다',
+      likeCount: story.likes.length
+    });
+  } catch (error) {
+    console.error('❌ 스토리 좋아요 실패:', error);
+    next(error);
+  }
+});
+
+// 스토리 좋아요 취소
+router.delete('/:storyId/like', authMiddleware, async (req, res, next) => {
+  try {
+    const storyId = req.params.storyId;
+    const userId = req.user.id;
+
+    console.log(`💔 스토리 좋아요 취소 - 사용자: ${userId}, 스토리: ${storyId}`);
+
+    const story = await Story.findById(storyId);
+
+    if (!story) {
+      return res.status(404).json({ error: '스토리를 찾을 수 없습니다' });
+    }
+
+    story.likes = story.likes.filter(id => id.toString() !== userId);
+    await story.save();
+
+    console.log(`✅ 좋아요 취소 - 총 좋아요: ${story.likes.length}개`);
+
+    res.json({
+      success: true,
+      message: '좋아요를 취소했습니다',
+      likeCount: story.likes.length
+    });
+  } catch (error) {
+    console.error('❌ 스토리 좋아요 취소 실패:', error);
+    next(error);
+  }
+});
+
+// 댓글 작성
+router.post('/:storyId/comments', authMiddleware, async (req, res, next) => {
+  try {
+    const storyId = req.params.storyId;
+    const userId = req.user.id;
+    const { text } = req.body;
+
+    if (!text || !text.trim()) {
+      return res.status(400).json({ error: '댓글 내용을 입력해주세요' });
+    }
+
+    if (text.length > 500) {
+      return res.status(400).json({ error: '댓글은 500자 이하로 작성해주세요' });
+    }
+
+    console.log(`💬 댓글 작성 - 사용자: ${userId}, 스토리: ${storyId}`);
+
+    const story = await Story.findById(storyId);
+
+    if (!story) {
+      return res.status(404).json({ error: '스토리를 찾을 수 없습니다' });
+    }
+
+    const comment = {
+      user: userId,
+      text: text.trim(),
+      createdAt: new Date()
+    };
+
+    story.comments.push(comment);
+    await story.save();
+
+    // 방금 추가한 댓글의 사용자 정보 populate
+    await story.populate('comments.user', 'nickname profileImage');
+    const newComment = story.comments[story.comments.length - 1];
+
+    console.log(`✅ 댓글 작성 완료 - 총 댓글: ${story.comments.length}개`);
+
+    res.json({
+      success: true,
+      message: '댓글이 작성되었습니다',
+      comment: newComment,
+      commentCount: story.comments.length
+    });
+  } catch (error) {
+    console.error('❌ 댓글 작성 실패:', error);
+    next(error);
+  }
+});
+
+// 댓글 삭제
+router.delete('/:storyId/comments/:commentId', authMiddleware, async (req, res, next) => {
+  try {
+    const { storyId, commentId } = req.params;
+    const userId = req.user.id;
+
+    console.log(`🗑️  댓글 삭제 - 사용자: ${userId}, 스토리: ${storyId}, 댓글: ${commentId}`);
+
+    const story = await Story.findById(storyId);
+
+    if (!story) {
+      return res.status(404).json({ error: '스토리를 찾을 수 없습니다' });
+    }
+
+    const comment = story.comments.id(commentId);
+
+    if (!comment) {
+      return res.status(404).json({ error: '댓글을 찾을 수 없습니다' });
+    }
+
+    // 본인 댓글 또는 스토리 작성자만 삭제 가능
+    if (comment.user.toString() !== userId && story.user.toString() !== userId) {
+      return res.status(403).json({ error: '댓글 삭제 권한이 없습니다' });
+    }
+
+    story.comments.pull(commentId);
+    await story.save();
+
+    console.log(`✅ 댓글 삭제 완료 - 총 댓글: ${story.comments.length}개`);
+
+    res.json({
+      success: true,
+      message: '댓글이 삭제되었습니다',
+      commentCount: story.comments.length
+    });
+  } catch (error) {
+    console.error('❌ 댓글 삭제 실패:', error);
+    next(error);
+  }
+});
+
 module.exports = router;

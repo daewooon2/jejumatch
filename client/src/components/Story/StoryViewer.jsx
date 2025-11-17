@@ -1,14 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
 import { storyAPI } from '../../services/api';
+import { useAuth } from '../../hooks/useAuth';
 import './StoryViewer.css';
 
-const StoryViewer = ({ stories, initialIndex = 0, onClose }) => {
+const StoryViewer = ({ stories, initialIndex = 0, onClose, onDelete }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [comments, setComments] = useState([]);
+  const [commentText, setCommentText] = useState('');
+  const [showComments, setShowComments] = useState(false);
   const timerRef = useRef(null);
   const startTimeRef = useRef(null);
   const pausedTimeRef = useRef(0);
+  const { user } = useAuth();
 
   const STORY_DURATION = 5000; // 5초
 
@@ -21,7 +28,14 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose }) => {
     storyAPI.viewStory(currentStory._id).catch(err =>
       console.error('스토리 조회 기록 실패:', err)
     );
-  }, [currentStory]);
+
+    // 좋아요/댓글 상태 초기화
+    setLiked(currentStory.likes?.includes(user?._id) || false);
+    setLikeCount(currentStory.likes?.length || 0);
+    setComments(currentStory.comments || []);
+    setShowComments(false);
+    setCommentText('');
+  }, [currentStory, user]);
 
   // ESC 키로 닫기, 화살표 키로 이동
   useEffect(() => {
@@ -93,6 +107,61 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose }) => {
     setIsPaused(false);
   };
 
+  const handleLike = async () => {
+    try {
+      if (liked) {
+        await storyAPI.unlikeStory(currentStory._id);
+        setLiked(false);
+        setLikeCount(prev => prev - 1);
+      } else {
+        await storyAPI.likeStory(currentStory._id);
+        setLiked(true);
+        setLikeCount(prev => prev + 1);
+      }
+    } catch (error) {
+      console.error('좋아요 처리 실패:', error);
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!commentText.trim()) return;
+
+    try {
+      const res = await storyAPI.addComment(currentStory._id, commentText.trim());
+      setComments([...comments, res.data.comment]);
+      setCommentText('');
+    } catch (error) {
+      console.error('댓글 작성 실패:', error);
+      alert(error.response?.data?.error || '댓글 작성에 실패했습니다');
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm('댓글을 삭제하시겠습니까?')) return;
+
+    try {
+      await storyAPI.deleteComment(currentStory._id, commentId);
+      setComments(comments.filter(c => c._id !== commentId));
+    } catch (error) {
+      console.error('댓글 삭제 실패:', error);
+      alert(error.response?.data?.error || '댓글 삭제에 실패했습니다');
+    }
+  };
+
+  const handleDeleteStory = async () => {
+    if (!window.confirm('스토리를 삭제하시겠습니까?')) return;
+
+    try {
+      await storyAPI.deleteStory(currentStory._id);
+      alert('스토리가 삭제되었습니다');
+      if (onDelete) onDelete(currentStory._id);
+      onClose();
+    } catch (error) {
+      console.error('스토리 삭제 실패:', error);
+      alert(error.response?.data?.error || '스토리 삭제에 실패했습니다');
+    }
+  };
+
   const getImageUrl = (url) => {
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
@@ -129,9 +198,16 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose }) => {
             <span className="story-time">{formatTime(currentStory.createdAt)}</span>
           </div>
         </div>
-        <button className="story-close-btn" onClick={onClose}>
-          ×
-        </button>
+        <div className="story-header-actions">
+          {currentStory.user._id === user?._id && (
+            <button className="story-delete-btn" onClick={handleDeleteStory} title="스토리 삭제">
+              🗑️
+            </button>
+          )}
+          <button className="story-close-btn" onClick={onClose}>
+            ×
+          </button>
+        </div>
       </div>
 
       {/* 프로그레스 바 */}
@@ -163,7 +239,80 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose }) => {
         {currentStory.caption && (
           <div className="story-caption">{currentStory.caption}</div>
         )}
+
+        {/* 좋아요 & 댓글 버튼 */}
+        <div className="story-actions">
+          <button
+            className={`like-btn ${liked ? 'liked' : ''}`}
+            onClick={handleLike}
+          >
+            {liked ? '❤️' : '🤍'} {likeCount > 0 && likeCount}
+          </button>
+          <button
+            className="comment-btn"
+            onClick={() => setShowComments(!showComments)}
+          >
+            💬 {comments.length > 0 && comments.length}
+          </button>
+        </div>
       </div>
+
+      {/* 댓글 섹션 */}
+      {showComments && (
+        <div className="story-comments-section">
+          <div className="comments-header">
+            <h3>댓글 {comments.length}</h3>
+            <button onClick={() => setShowComments(false)}>×</button>
+          </div>
+
+          <div className="comments-list">
+            {comments.length === 0 ? (
+              <p className="no-comments">첫 댓글을 남겨보세요!</p>
+            ) : (
+              comments.map((comment) => (
+                <div key={comment._id} className="comment-item">
+                  <img
+                    src={getImageUrl(comment.user.profileImage)}
+                    alt={comment.user.nickname}
+                    className="comment-avatar"
+                    onError={(e) => (e.target.src = '/default-avatar.png')}
+                  />
+                  <div className="comment-content">
+                    <div className="comment-header">
+                      <span className="comment-author">{comment.user.nickname}</span>
+                      <span className="comment-time">{formatTime(comment.createdAt)}</span>
+                    </div>
+                    <p className="comment-text">{comment.text}</p>
+                  </div>
+                  {(comment.user._id === user?._id || currentStory.user._id === user?._id) && (
+                    <button
+                      className="delete-comment-btn"
+                      onClick={() => handleDeleteComment(comment._id)}
+                      title="댓글 삭제"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="comment-input-container">
+            <input
+              type="text"
+              placeholder="댓글을 입력하세요..."
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
+              maxLength={500}
+            />
+            <button onClick={handleAddComment} disabled={!commentText.trim()}>
+              전송
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 네비게이션 (좌우 클릭 + 화살표 버튼) */}
       <div className="story-navigation">

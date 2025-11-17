@@ -44,6 +44,11 @@ const MatchesPage = () => {
     setViewingStories(storyList);
   };
 
+  const handleStoryDelete = (deletedStoryId) => {
+    // 삭제된 스토리를 목록에서 제거
+    fetchStories();
+  };
+
   const handleCancelMatch = async (matchId, matchedUserName, e) => {
     e.stopPropagation(); // 클릭 이벤트 버블링 방지
 
@@ -201,6 +206,7 @@ const MatchesPage = () => {
         <StoryViewer
           stories={viewingStories}
           onClose={() => setViewingStories(null)}
+          onDelete={handleStoryDelete}
         />
       )}
     </div>
