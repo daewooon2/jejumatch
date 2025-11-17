@@ -15,36 +15,47 @@ const UserCard = ({ user, onLike, onClick }) => {
     return `${API_BASE}${profileImage}`;
   };
 
+  // 안전한 데이터 접근
+  const nickname = user?.nickname || '알 수 없음';
+  const age = user?.age || 0;
+  const gender = user?.gender === 'male' ? '남성' : '여성';
+  const college = user?.college;
+  const mbti = user?.mbti;
+  const aiScore = user?.aiScore;
+  const likesCount = user?.likesCount ?? 0;
+  const isLikedByMe = user?.isLikedByMe || false;
+  const userId = user?.id || user?._id;
+
   return (
     <div className="user-card" onClick={onClick}>
       <div className="card-image">
         <img
-          src={getImageUrl(user.profileImage)}
-          alt={user.nickname}
+          src={getImageUrl(user?.profileImage)}
+          alt={nickname}
           onError={(e) => e.target.src = '/default-avatar.png'}
         />
-        {user.aiScore && (
-          <div className="ai-badge">{user.aiScore}점</div>
+        {aiScore && (
+          <div className="ai-badge">{aiScore}점</div>
         )}
       </div>
-      
+
       <div className="card-content">
-        <h3>{user.nickname}</h3>
-        <p>{user.age}세 · {user.gender === 'male' ? '남성' : '여성'}</p>
-        {user.college && <p>{user.college}</p>}
-        {user.mbti && <p>MBTI: {user.mbti}</p>}
-        <p>❤️ {user.likesCount || 0}개</p>
+        <h3>{nickname}</h3>
+        <p>{age}세 · {gender}</p>
+        {college && <p>{college}</p>}
+        {mbti && <p>MBTI: {mbti}</p>}
+        <p>❤️ {likesCount}개</p>
       </div>
-      
-      <button 
-        className={`like-btn ${user.isLikedByMe ? 'liked' : ''}`}
+
+      <button
+        className={`like-btn ${isLikedByMe ? 'liked' : ''}`}
         onClick={(e) => {
           e.stopPropagation();
-          onLike(user.id || user._id);
+          if (userId) onLike(userId);
         }}
-        disabled={user.isLikedByMe}
+        disabled={isLikedByMe}
       >
-        {user.isLikedByMe ? '좋아요 완료' : '❤️ 좋아요'}
+        {isLikedByMe ? '좋아요 완료' : '❤️ 좋아요'}
       </button>
     </div>
   );

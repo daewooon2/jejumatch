@@ -30,8 +30,10 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose, onDelete }) => {
     );
 
     // 좋아요/댓글 상태 초기화
-    setLiked(currentStory.likes?.includes(user?._id) || false);
-    setLikeCount(currentStory.likes?.length || 0);
+    const likes = currentStory.likes || [];
+    const isLiked = likes.some(id => id === user?._id || id.toString() === user?._id);
+    setLiked(isLiked);
+    setLikeCount(likes.length);
     setComments(currentStory.comments || []);
     setShowComments(false);
     setCommentText('');
@@ -269,32 +271,36 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose, onDelete }) => {
             {comments.length === 0 ? (
               <p className="no-comments">첫 댓글을 남겨보세요!</p>
             ) : (
-              comments.map((comment) => (
-                <div key={comment._id} className="comment-item">
-                  <img
-                    src={getImageUrl(comment.user.profileImage)}
-                    alt={comment.user.nickname}
-                    className="comment-avatar"
-                    onError={(e) => (e.target.src = '/default-avatar.png')}
-                  />
-                  <div className="comment-content">
-                    <div className="comment-header">
-                      <span className="comment-author">{comment.user.nickname}</span>
-                      <span className="comment-time">{formatTime(comment.createdAt)}</span>
+              comments.map((comment) => {
+                // 댓글 사용자 정보가 없을 경우 기본값 사용
+                const commentUser = comment.user || { nickname: '알 수 없음', profileImage: null, _id: null };
+                return (
+                  <div key={comment._id} className="comment-item">
+                    <img
+                      src={getImageUrl(commentUser.profileImage)}
+                      alt={commentUser.nickname}
+                      className="comment-avatar"
+                      onError={(e) => (e.target.src = '/default-avatar.png')}
+                    />
+                    <div className="comment-content">
+                      <div className="comment-header">
+                        <span className="comment-author">{commentUser.nickname}</span>
+                        <span className="comment-time">{formatTime(comment.createdAt)}</span>
+                      </div>
+                      <p className="comment-text">{comment.text}</p>
                     </div>
-                    <p className="comment-text">{comment.text}</p>
+                    {(commentUser._id === user?._id || currentStory.user._id === user?._id) && (
+                      <button
+                        className="delete-comment-btn"
+                        onClick={() => handleDeleteComment(comment._id)}
+                        title="댓글 삭제"
+                      >
+                        ×
+                      </button>
+                    )}
                   </div>
-                  {(comment.user._id === user?._id || currentStory.user._id === user?._id) && (
-                    <button
-                      className="delete-comment-btn"
-                      onClick={() => handleDeleteComment(comment._id)}
-                      title="댓글 삭제"
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 

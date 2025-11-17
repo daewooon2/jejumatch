@@ -67,6 +67,7 @@ router.get('/', authMiddleware, async (req, res, next) => {
       expiresAt: { $gt: new Date() }
     })
       .populate('user', 'nickname profileImage')
+      .populate('comments.user', 'nickname profileImage')
       .sort({ createdAt: -1 });
 
     // 사용자별로 그룹화
@@ -134,6 +135,7 @@ router.get('/:userId', authMiddleware, async (req, res, next) => {
       expiresAt: { $gt: new Date() }
     })
       .populate('user', 'nickname profileImage')
+      .populate('comments.user', 'nickname profileImage')
       .sort({ createdAt: 1 }); // 오래된 것부터
 
     console.log(`📖 스토리 ${stories.length}개 찾음`);
