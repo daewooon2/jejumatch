@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { storyAPI } from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import './StoryViewer.css';
@@ -63,15 +63,25 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
       if (e.key === 'Escape') {
         onClose?.();
       } else if (e.key === 'ArrowLeft') {
-        prevStory();
+        if (currentIndex > 0) {
+          setCurrentIndex(currentIndex - 1);
+          setProgress(0);
+          pausedTimeRef.current = 0;
+        }
       } else if (e.key === 'ArrowRight') {
-        nextStory();
+        if (currentIndex < stories.length - 1) {
+          setCurrentIndex(currentIndex + 1);
+          setProgress(0);
+          pausedTimeRef.current = 0;
+        } else {
+          onClose?.();
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentIndex, onClose, prevStory, nextStory]);
+  }, [currentIndex, onClose, stories.length]);
 
   // 댓글 섹션이 열리거나 댓글 입력에 포커스가 있을 때 일시정지
   useEffect(() => {
@@ -118,7 +128,7 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
     };
   }, [currentIndex, isPaused, currentStory, stories.length, onClose]);
 
-  const nextStory = useCallback(() => {
+  const nextStory = () => {
     if (currentIndex < stories.length - 1) {
       setCurrentIndex(currentIndex + 1);
       setProgress(0);
@@ -126,15 +136,15 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
     } else {
       onClose?.();
     }
-  }, [currentIndex, stories.length, onClose]);
+  };
 
-  const prevStory = useCallback(() => {
+  const prevStory = () => {
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
       setProgress(0);
       pausedTimeRef.current = 0;
     }
-  }, [currentIndex]);
+  };
 
   const handlePause = () => {
     setIsPaused(true);
@@ -277,15 +287,19 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
   };
 
   // currentStory가 없으면 빈 화면 렌더링
-  if (!currentStory || !stories || stories.length === 0) {
+  if (!stories || stories.length === 0) {
     return (
       <div className="story-viewer-overlay">
         <div className="story-error">
           <p>스토리를 불러올 수 없습니다</p>
-          <button onClick={onClose}>닫기</button>
+          <button onClick={() => onClose?.()}>닫기</button>
         </div>
       </div>
     );
+  }
+
+  if (!currentStory) {
+    return null;
   }
 
   // 안전한 데이터 접근

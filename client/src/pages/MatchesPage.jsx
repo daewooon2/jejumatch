@@ -34,14 +34,18 @@ const MatchesPage = () => {
   const fetchStories = async () => {
     try {
       const res = await storyAPI.getStories();
+      console.log('스토리 로드 성공:', res.data);
       setStories(res.data.stories || []);
     } catch (error) {
       console.error('스토리 로드 실패:', error);
+      setStories([]);
     }
   };
 
   const openStoryViewer = (storyList) => {
-    setViewingStories(storyList);
+    if (storyList && storyList.length > 0) {
+      setViewingStories(storyList);
+    }
   };
 
   const handleStoryDelete = (deletedStoryId) => {
@@ -123,26 +127,35 @@ const MatchesPage = () => {
             </div>
 
             {/* 친구들 스토리 */}
-            {stories.map((storyGroup) => (
-              <div
-                key={storyGroup.user._id}
-                className="story-card"
-                onClick={() => openStoryViewer(storyGroup.stories)}
-              >
-                <div className="story-thumbnail">
-                  <img
-                    src={getImageUrl(storyGroup.stories[0].imageUrl)}
-                    alt={storyGroup.user.nickname}
-                    onError={(e) => (e.target.src = '/default-avatar.png')}
-                  />
-                  {storyGroup.hasUnviewed && (
-                    <span className="new-badge">NEW</span>
-                  )}
+            {stories.map((storyGroup) => {
+              console.log('스토리 그룹:', storyGroup);
+              if (!storyGroup || !storyGroup.stories || storyGroup.stories.length === 0) {
+                return null;
+              }
+              return (
+                <div
+                  key={storyGroup.user?._id || Math.random()}
+                  className="story-card"
+                  onClick={() => {
+                    console.log('스토리 클릭:', storyGroup.stories);
+                    openStoryViewer(storyGroup.stories);
+                  }}
+                >
+                  <div className="story-thumbnail">
+                    <img
+                      src={getImageUrl(storyGroup.stories[0]?.imageUrl)}
+                      alt={storyGroup.user?.nickname || '사용자'}
+                      onError={(e) => (e.target.src = '/default-avatar.png')}
+                    />
+                    {storyGroup.hasUnviewed && (
+                      <span className="new-badge">NEW</span>
+                    )}
+                  </div>
+                  <p className="story-user-name">{storyGroup.user?.nickname || '알 수 없음'}</p>
+                  <p className="story-time">{formatTime(storyGroup.stories[0]?.createdAt)}</p>
                 </div>
-                <p className="story-user-name">{storyGroup.user.nickname}</p>
-                <p className="story-time">{formatTime(storyGroup.stories[0].createdAt)}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
