@@ -107,12 +107,83 @@ export const useSocket = () => {
     }
   }, []);
 
+  // 스토리 관련 메서드들
+  const joinStory = useCallback((storyId) => {
+    if (socketRef.current && connected) {
+      console.log('📸 스토리 룸 참가 요청:', storyId);
+      socketRef.current.emit('join-story', storyId);
+    } else {
+      console.log('⚠️  소켓 연결 안 됨, 스토리 룸 참가 불가');
+    }
+  }, [connected]);
+
+  const leaveStory = useCallback((storyId) => {
+    if (socketRef.current && connected) {
+      console.log('👋 스토리 룸 퇴장:', storyId);
+      socketRef.current.emit('leave-story', storyId);
+    }
+  }, [connected]);
+
+  const addStoryComment = useCallback((storyId, comment) => {
+    if (socketRef.current && connected) {
+      console.log('💬 스토리 댓글 추가:', { storyId, comment });
+      socketRef.current.emit('add-story-comment', { storyId, comment });
+    }
+  }, [connected]);
+
+  const deleteStoryComment = useCallback((storyId, commentId) => {
+    if (socketRef.current && connected) {
+      console.log('🗑️ 스토리 댓글 삭제:', { storyId, commentId });
+      socketRef.current.emit('delete-story-comment', { storyId, commentId });
+    }
+  }, [connected]);
+
+  const toggleStoryLike = useCallback((storyId, isLiked, likeCount) => {
+    if (socketRef.current && connected) {
+      console.log('❤️ 스토리 좋아요 토글:', { storyId, isLiked, likeCount });
+      socketRef.current.emit('toggle-story-like', { storyId, isLiked, likeCount });
+    }
+  }, [connected]);
+
+  const onStoryCommentAdded = useCallback((callback) => {
+    if (socketRef.current) {
+      console.log('👂 story-comment-added 리스너 등록');
+      socketRef.current.off('story-comment-added');
+      socketRef.current.on('story-comment-added', callback);
+    }
+  }, []);
+
+  const onStoryCommentDeleted = useCallback((callback) => {
+    if (socketRef.current) {
+      console.log('👂 story-comment-deleted 리스너 등록');
+      socketRef.current.off('story-comment-deleted');
+      socketRef.current.on('story-comment-deleted', callback);
+    }
+  }, []);
+
+  const onStoryLikeToggled = useCallback((callback) => {
+    if (socketRef.current) {
+      console.log('👂 story-like-toggled 리스너 등록');
+      socketRef.current.off('story-like-toggled');
+      socketRef.current.on('story-like-toggled', callback);
+    }
+  }, []);
+
   return {
     connected,
     joinMatch,
     sendMessage,
     onNewMessage,
     markAsRead,
-    onMessagesRead
+    onMessagesRead,
+    // 스토리 관련
+    joinStory,
+    leaveStory,
+    addStoryComment,
+    deleteStoryComment,
+    toggleStoryLike,
+    onStoryCommentAdded,
+    onStoryCommentDeleted,
+    onStoryLikeToggled
   };
 };

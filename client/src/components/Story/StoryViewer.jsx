@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { storyAPI } from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
+import { useSocket } from '../../hooks/useSocket';
 import './StoryViewer.css';
 
 const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
@@ -23,6 +24,18 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
   const isMountedRef = useRef(true);
   const { user } = useAuth();
 
+  // Socket.io 훅
+  const {
+    joinStory,
+    leaveStory,
+    addStoryComment,
+    deleteStoryComment,
+    toggleStoryLike,
+    onStoryCommentAdded,
+    onStoryCommentDeleted,
+    onStoryLikeToggled
+  } = useSocket();
+
   const STORY_DURATION = 5000; // 5초
 
   // 안전한 currentStory 접근
@@ -32,8 +45,12 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
   useEffect(() => {
     return () => {
       isMountedRef.current = false;
+      // 컴포넌트 언마운트 시 스토리 룸 나가기
+      if (currentStory?._id) {
+        leaveStory(currentStory._id);
+      }
     };
-  }, []);
+  }, [currentStory, leaveStory]);
 
   useEffect(() => {
     if (!currentStory) return;
@@ -42,6 +59,10 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
     storyAPI.viewStory(currentStory._id).catch(err =>
       console.error('스토리 조회 기록 실패:', err)
     );
+
+    // 스토리 룸 참가
+    console.log('📸 스토리 룸 참가:', currentStory._id);
+    joinStory(currentStory._id);
 
     // 좋아요 상태 초기화
     const likes = currentStory.likes || [];
@@ -62,7 +83,66 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
 
     setShowComments(false);
     setCommentText('');
-  }, [currentStory, user]);
+
+    // 이전 스토리 룸에서 나가기 (스토리 전환 시)
+    return () => {
+      if (currentStory._id) {
+        console.log('👋 스토리 룸 나가기:', currentStory._id);
+        leaveStory(currentStory._id);
+      }
+    };
+  }, [currentStory, user, joinStory, leaveStory]);
+
+  // Socket.io 실시간 이벤트 리스너
+  useEffect(() => {
+    if (!currentStory) return;
+
+    // 댓글 추가 이벤트 리스너
+    const handleCommentAdded = (data) => {
+      console.log('💬 실시간 댓글 추가 이벤트:', data);
+      if (data.storyId === currentStory._id && data.comment) {
+        // 현재 사용자가 추가한 댓글이 아닌 경우에만 업데이트
+        if (data.userId !== user?._id) {
+          setCommentsMap(prev => ({
+            ...prev,
+            [data.storyId]: [...(prev[data.storyId] || []), data.comment]
+          }));
+        }
+      }
+    };
+
+    // 댓글 삭제 이벤트 리스너
+    const handleCommentDeleted = (data) => {
+      console.log('🗑️ 실시간 댓글 삭제 이벤트:', data);
+      if (data.storyId === currentStory._id && data.commentId) {
+        setCommentsMap(prev => ({
+          ...prev,
+          [data.storyId]: (prev[data.storyId] || []).filter(c => c?._id !== data.commentId)
+        }));
+      }
+    };
+
+    // 좋아요 토글 이벤트 리스너
+    const handleLikeToggled = (data) => {
+      console.log('❤️ 실시간 좋아요 토글 이벤트:', data);
+      if (data.storyId === currentStory._id) {
+        // 다른 사용자가 좋아요를 눌렀을 때 카운트만 업데이트
+        if (data.userId !== user?._id) {
+          setLikeCount(data.likeCount || 0);
+        }
+      }
+    };
+
+    // 리스너 등록
+    onStoryCommentAdded(handleCommentAdded);
+    onStoryCommentDeleted(handleCommentDeleted);
+    onStoryLikeToggled(handleLikeToggled);
+
+    // 클린업 - 실제로는 useSocket 내부에서 off 처리됨
+    return () => {
+      console.log('🧹 스토리 이벤트 리스너 클린업');
+    };
+  }, [currentStory, user, onStoryCommentAdded, onStoryCommentDeleted, onStoryLikeToggled]);
 
   // ESC 키로 닫기, 화살표 키로 이동
   useEffect(() => {
@@ -174,12 +254,16 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
         if (isMountedRef.current) {
           setLiked(false);
           setLikeCount(prev => Math.max(0, prev - 1));
+          // Socket.io로 좋아요 토글 이벤트 전송
+          toggleStoryLike(currentStory._id, false, likeCount - 1);
         }
       } else {
         await storyAPI.likeStory(currentStory._id);
         if (isMountedRef.current) {
           setLiked(true);
           setLikeCount(prev => prev + 1);
+          // Socket.io로 좋아요 토글 이벤트 전송
+          toggleStoryLike(currentStory._id, true, likeCount + 1);
         }
       }
     } catch (error) {
@@ -204,6 +288,8 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
           ...prev,
           [currentStory._id]: [...(prev[currentStory._id] || []), newComment]
         }));
+        // Socket.io로 댓글 추가 이벤트 전송
+        addStoryComment(currentStory._id, newComment);
         setCommentText('');
         setIsCommentFocused(false);
       }
@@ -232,6 +318,8 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
           ...prev,
           [currentStory._id]: (prev[currentStory._id] || []).filter(c => c?._id !== commentId)
         }));
+        // Socket.io로 댓글 삭제 이벤트 전송
+        deleteStoryComment(currentStory._id, commentId);
       }
     } catch (error) {
       console.error('댓글 삭제 실패:', error);

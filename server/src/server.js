@@ -4,6 +4,7 @@ const socketio = require('socket.io');
 const app = require('./app');
 const connectDB = require('./config/database');
 const chatHandler = require('./sockets/chatHandler');
+const storyHandler = require('./sockets/storyHandler');
 
 const PORT = process.env.PORT || 5000;
 
@@ -23,6 +24,7 @@ const io = socketio(server, {
 
 // 소켓 핸들러 연결
 chatHandler(io);
+storyHandler(io);
 
 // 서버 시작
 server.listen(PORT, () => {
