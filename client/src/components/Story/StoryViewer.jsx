@@ -9,11 +9,13 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
   const [isPaused, setIsPaused] = useState(false);
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
-  const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
   const [showComments, setShowComments] = useState(false);
   const [isCommentFocused, setIsCommentFocused] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // 각 스토리별 댓글을 별도로 관리
+  const [commentsMap, setCommentsMap] = useState({});
 
   const timerRef = useRef(null);
   const startTimeRef = useRef(null);
@@ -41,16 +43,23 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
       console.error('스토리 조회 기록 실패:', err)
     );
 
-    // 좋아요/댓글 상태 초기화
+    // 좋아요 상태 초기화
     const likes = currentStory.likes || [];
-    const storyComments = currentStory.comments || [];
     const isLiked = user?._id ? likes.some(id =>
       id === user._id || id?.toString() === user._id
     ) : false;
 
     setLiked(isLiked);
     setLikeCount(likes.length);
-    setComments([...storyComments]); // 깊은 복사
+
+    // 댓글 초기화 - commentsMap에 없으면 currentStory의 comments 사용
+    if (!commentsMap[currentStory._id]) {
+      setCommentsMap(prev => ({
+        ...prev,
+        [currentStory._id]: currentStory.comments || []
+      }));
+    }
+
     setShowComments(false);
     setCommentText('');
   }, [currentStory, user]);
@@ -190,7 +199,11 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
       const res = await storyAPI.addComment(currentStory._id, commentText.trim());
       if (isMountedRef.current && res?.data?.comment) {
         const newComment = res.data.comment;
-        setComments(prevComments => [...prevComments, newComment]);
+        // commentsMap에 댓글 추가
+        setCommentsMap(prev => ({
+          ...prev,
+          [currentStory._id]: [...(prev[currentStory._id] || []), newComment]
+        }));
         setCommentText('');
         setIsCommentFocused(false);
       }
@@ -214,7 +227,11 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
     try {
       await storyAPI.deleteComment(currentStory._id, commentId);
       if (isMountedRef.current) {
-        setComments(prevComments => prevComments.filter(c => c?._id !== commentId));
+        // commentsMap에서 댓글 삭제
+        setCommentsMap(prev => ({
+          ...prev,
+          [currentStory._id]: (prev[currentStory._id] || []).filter(c => c?._id !== commentId)
+        }));
       }
     } catch (error) {
       console.error('댓글 삭제 실패:', error);
@@ -307,6 +324,9 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
   const storyImageUrl = currentStory.imageUrl;
   const storyCaption = currentStory.caption;
 
+  // 현재 스토리의 댓글 가져오기
+  const currentComments = commentsMap[currentStory._id] || [];
+
   return (
     <div className="story-viewer-overlay">
       {/* 헤더 */}
@@ -384,7 +404,7 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
             onClick={() => setShowComments(!showComments)}
             disabled={loading}
           >
-            💬 {comments.length > 0 && comments.length}
+            💬 {currentComments.length > 0 && currentComments.length}
           </button>
         </div>
       </div>
@@ -393,15 +413,15 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
       {showComments && (
         <div className="story-comments-section">
           <div className="comments-header">
-            <h3>댓글 {comments.length}</h3>
+            <h3>댓글 {currentComments.length}</h3>
             <button onClick={() => setShowComments(false)}>×</button>
           </div>
 
           <div className="comments-list">
-            {comments.length === 0 ? (
+            {currentComments.length === 0 ? (
               <p className="no-comments">첫 댓글을 남겨보세요!</p>
             ) : (
-              comments.map((comment) => {
+              currentComments.map((comment) => {
                 if (!comment || !comment._id) return null;
 
                 const commentUser = comment.user || {
