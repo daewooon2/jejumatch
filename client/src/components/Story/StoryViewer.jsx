@@ -12,6 +12,7 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose, onDelete }) => {
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
   const [showComments, setShowComments] = useState(false);
+  const [isCommentFocused, setIsCommentFocused] = useState(false);
   const timerRef = useRef(null);
   const startTimeRef = useRef(null);
   const pausedTimeRef = useRef(0);
@@ -54,6 +55,15 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose, onDelete }) => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentIndex]);
+
+  // 댓글 섹션이 열리거나 댓글 입력에 포커스가 있을 때 일시정지
+  useEffect(() => {
+    if (showComments || isCommentFocused) {
+      setIsPaused(true);
+    } else {
+      setIsPaused(false);
+    }
+  }, [showComments, isCommentFocused]);
 
   useEffect(() => {
     if (isPaused) return;
@@ -130,8 +140,15 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose, onDelete }) => {
 
     try {
       const res = await storyAPI.addComment(currentStory._id, commentText.trim());
-      setComments([...comments, res.data.comment]);
+      // 새 댓글을 목록에 추가
+      const newComment = res.data.comment;
+      setComments(prevComments => [...prevComments, newComment]);
+      // 현재 스토리 객체의 comments 배열도 업데이트
+      if (currentStory.comments) {
+        currentStory.comments.push(newComment);
+      }
       setCommentText('');
+      setIsCommentFocused(false); // 댓글 작성 후 포커스 해제
     } catch (error) {
       console.error('댓글 작성 실패:', error);
       alert(error.response?.data?.error || '댓글 작성에 실패했습니다');
@@ -143,7 +160,12 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose, onDelete }) => {
 
     try {
       await storyAPI.deleteComment(currentStory._id, commentId);
-      setComments(comments.filter(c => c._id !== commentId));
+      // 댓글 목록에서 제거
+      setComments(prevComments => prevComments.filter(c => c._id !== commentId));
+      // 현재 스토리 객체의 comments 배열에서도 제거
+      if (currentStory.comments) {
+        currentStory.comments = currentStory.comments.filter(c => c._id !== commentId);
+      }
     } catch (error) {
       console.error('댓글 삭제 실패:', error);
       alert(error.response?.data?.error || '댓글 삭제에 실패했습니다');
@@ -311,6 +333,8 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose, onDelete }) => {
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
+              onFocus={() => setIsCommentFocused(true)}
+              onBlur={() => setIsCommentFocused(false)}
               maxLength={500}
             />
             <button onClick={handleAddComment} disabled={!commentText.trim()}>

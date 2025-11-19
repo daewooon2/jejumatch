@@ -54,8 +54,9 @@ const UserCard = ({ user, onLike, onClick }) => {
           if (userId) onLike(userId);
         }}
         disabled={isLikedByMe}
+        title={isLikedByMe ? '좋아요 완료' : '좋아요'}
       >
-        {isLikedByMe ? '좋아요 완료' : '❤️ 좋아요'}
+        {isLikedByMe ? '❤️' : '🤍'}
       </button>
     </div>
   );
