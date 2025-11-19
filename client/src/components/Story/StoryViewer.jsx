@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { storyAPI } from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import './StoryViewer.css';
 
-const StoryViewer = ({ stories, initialIndex = 0, onClose, onDelete }) => {
+const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -13,14 +13,25 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose, onDelete }) => {
   const [commentText, setCommentText] = useState('');
   const [showComments, setShowComments] = useState(false);
   const [isCommentFocused, setIsCommentFocused] = useState(false);
+  const [loading, setLoading] = useState(false);
+
   const timerRef = useRef(null);
   const startTimeRef = useRef(null);
   const pausedTimeRef = useRef(0);
+  const isMountedRef = useRef(true);
   const { user } = useAuth();
 
   const STORY_DURATION = 5000; // 5초
 
-  const currentStory = stories[currentIndex];
+  // 안전한 currentStory 접근
+  const currentStory = stories && stories[currentIndex] ? stories[currentIndex] : null;
+
+  // 컴포넌트 언마운트 추적
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!currentStory) return;
@@ -32,10 +43,14 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose, onDelete }) => {
 
     // 좋아요/댓글 상태 초기화
     const likes = currentStory.likes || [];
-    const isLiked = likes.some(id => id === user?._id || id.toString() === user?._id);
+    const storyComments = currentStory.comments || [];
+    const isLiked = user?._id ? likes.some(id =>
+      id === user._id || id?.toString() === user._id
+    ) : false;
+
     setLiked(isLiked);
     setLikeCount(likes.length);
-    setComments(currentStory.comments || []);
+    setComments([...storyComments]); // 깊은 복사
     setShowComments(false);
     setCommentText('');
   }, [currentStory, user]);
@@ -43,8 +58,10 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose, onDelete }) => {
   // ESC 키로 닫기, 화살표 키로 이동
   useEffect(() => {
     const handleKeyDown = (e) => {
+      if (!isMountedRef.current) return;
+
       if (e.key === 'Escape') {
-        onClose();
+        onClose?.();
       } else if (e.key === 'ArrowLeft') {
         prevStory();
       } else if (e.key === 'ArrowRight') {
@@ -54,7 +71,7 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose, onDelete }) => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentIndex]);
+  }, [currentIndex, onClose, prevStory, nextStory]);
 
   // 댓글 섹션이 열리거나 댓글 입력에 포커스가 있을 때 일시정지
   useEffect(() => {
@@ -66,18 +83,27 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose, onDelete }) => {
   }, [showComments, isCommentFocused]);
 
   useEffect(() => {
-    if (isPaused) return;
+    if (isPaused || !currentStory) return;
 
     startTimeRef.current = Date.now() - pausedTimeRef.current;
 
     const updateProgress = () => {
+      if (!isMountedRef.current) return;
+
       const elapsed = Date.now() - startTimeRef.current;
       const newProgress = Math.min((elapsed / STORY_DURATION) * 100, 100);
 
       setProgress(newProgress);
 
       if (newProgress >= 100) {
-        nextStory();
+        // 다음 스토리로 이동
+        if (currentIndex < stories.length - 1) {
+          setCurrentIndex(prev => prev + 1);
+          setProgress(0);
+          pausedTimeRef.current = 0;
+        } else {
+          onClose?.();
+        }
       } else {
         timerRef.current = requestAnimationFrame(updateProgress);
       }
@@ -90,25 +116,25 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose, onDelete }) => {
         cancelAnimationFrame(timerRef.current);
       }
     };
-  }, [currentIndex, isPaused]);
+  }, [currentIndex, isPaused, currentStory, stories.length, onClose]);
 
-  const nextStory = () => {
+  const nextStory = useCallback(() => {
     if (currentIndex < stories.length - 1) {
       setCurrentIndex(currentIndex + 1);
       setProgress(0);
       pausedTimeRef.current = 0;
     } else {
-      onClose();
+      onClose?.();
     }
-  };
+  }, [currentIndex, stories.length, onClose]);
 
-  const prevStory = () => {
+  const prevStory = useCallback(() => {
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
       setProgress(0);
       pausedTimeRef.current = 0;
     }
-  };
+  }, [currentIndex]);
 
   const handlePause = () => {
     setIsPaused(true);
@@ -120,91 +146,152 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose, onDelete }) => {
   };
 
   const handleLike = async () => {
+    if (!currentStory?._id || loading) return;
+
+    setLoading(true);
     try {
       if (liked) {
         await storyAPI.unlikeStory(currentStory._id);
-        setLiked(false);
-        setLikeCount(prev => prev - 1);
+        if (isMountedRef.current) {
+          setLiked(false);
+          setLikeCount(prev => Math.max(0, prev - 1));
+        }
       } else {
         await storyAPI.likeStory(currentStory._id);
-        setLiked(true);
-        setLikeCount(prev => prev + 1);
+        if (isMountedRef.current) {
+          setLiked(true);
+          setLikeCount(prev => prev + 1);
+        }
       }
     } catch (error) {
       console.error('좋아요 처리 실패:', error);
+    } finally {
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   };
 
   const handleAddComment = async () => {
-    if (!commentText.trim()) return;
+    if (!commentText?.trim() || !currentStory?._id || loading) return;
 
+    setLoading(true);
     try {
       const res = await storyAPI.addComment(currentStory._id, commentText.trim());
-      // 새 댓글을 목록에 추가
-      const newComment = res.data.comment;
-      setComments(prevComments => [...prevComments, newComment]);
-      // 현재 스토리 객체의 comments 배열도 업데이트
-      if (currentStory.comments) {
-        currentStory.comments.push(newComment);
+      if (isMountedRef.current && res?.data?.comment) {
+        const newComment = res.data.comment;
+        setComments(prevComments => [...prevComments, newComment]);
+        setCommentText('');
+        setIsCommentFocused(false);
       }
-      setCommentText('');
-      setIsCommentFocused(false); // 댓글 작성 후 포커스 해제
     } catch (error) {
       console.error('댓글 작성 실패:', error);
-      alert(error.response?.data?.error || '댓글 작성에 실패했습니다');
+      if (isMountedRef.current) {
+        alert(error.response?.data?.error || '댓글 작성에 실패했습니다');
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   };
 
   const handleDeleteComment = async (commentId) => {
+    if (!commentId || !currentStory?._id || loading) return;
     if (!window.confirm('댓글을 삭제하시겠습니까?')) return;
 
+    setLoading(true);
     try {
       await storyAPI.deleteComment(currentStory._id, commentId);
-      // 댓글 목록에서 제거
-      setComments(prevComments => prevComments.filter(c => c._id !== commentId));
-      // 현재 스토리 객체의 comments 배열에서도 제거
-      if (currentStory.comments) {
-        currentStory.comments = currentStory.comments.filter(c => c._id !== commentId);
+      if (isMountedRef.current) {
+        setComments(prevComments => prevComments.filter(c => c?._id !== commentId));
       }
     } catch (error) {
       console.error('댓글 삭제 실패:', error);
-      alert(error.response?.data?.error || '댓글 삭제에 실패했습니다');
+      if (isMountedRef.current) {
+        alert(error.response?.data?.error || '댓글 삭제에 실패했습니다');
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   };
 
   const handleDeleteStory = async () => {
+    if (!currentStory?._id || loading) return;
     if (!window.confirm('스토리를 삭제하시겠습니까?')) return;
 
+    setLoading(true);
     try {
       await storyAPI.deleteStory(currentStory._id);
-      alert('스토리가 삭제되었습니다');
-      if (onDelete) onDelete(currentStory._id);
-      onClose();
+      if (isMountedRef.current) {
+        alert('스토리가 삭제되었습니다');
+        onDelete?.(currentStory._id);
+        onClose?.();
+      }
     } catch (error) {
       console.error('스토리 삭제 실패:', error);
-      alert(error.response?.data?.error || '스토리 삭제에 실패했습니다');
+      if (isMountedRef.current) {
+        alert(error.response?.data?.error || '스토리 삭제에 실패했습니다');
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   };
 
   const getImageUrl = (url) => {
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
+    if (!url) return '/default-avatar.png';
+
+    try {
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
+      }
+      const API_BASE = process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000';
+      return `${API_BASE}${url}`;
+    } catch (error) {
+      console.error('이미지 URL 생성 실패:', error);
+      return '/default-avatar.png';
     }
-    const API_BASE = process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000';
-    return `${API_BASE}${url}`;
   };
 
   const formatTime = (date) => {
-    const now = new Date();
-    const diff = Math.floor((now - new Date(date)) / 1000); // 초 단위
+    if (!date) return '';
 
-    if (diff < 60) return `${diff}초 전`;
-    if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`;
-    return `${Math.floor(diff / 86400)}일 전`;
+    try {
+      const now = new Date();
+      const targetDate = new Date(date);
+      const diff = Math.floor((now - targetDate) / 1000);
+
+      if (isNaN(diff) || diff < 0) return '방금 전';
+      if (diff < 60) return `${diff}초 전`;
+      if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
+      if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`;
+      return `${Math.floor(diff / 86400)}일 전`;
+    } catch (error) {
+      console.error('시간 포맷 실패:', error);
+      return '';
+    }
   };
 
-  if (!currentStory) return null;
+  // currentStory가 없으면 빈 화면 렌더링
+  if (!currentStory || !stories || stories.length === 0) {
+    return (
+      <div className="story-viewer-overlay">
+        <div className="story-error">
+          <p>스토리를 불러올 수 없습니다</p>
+          <button onClick={onClose}>닫기</button>
+        </div>
+      </div>
+    );
+  }
+
+  // 안전한 데이터 접근
+  const storyUser = currentStory.user || {};
+  const storyImageUrl = currentStory.imageUrl;
+  const storyCaption = currentStory.caption;
 
   return (
     <div className="story-viewer-overlay">
@@ -212,19 +299,24 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose, onDelete }) => {
       <div className="story-header">
         <div className="story-user-info">
           <img
-            src={getImageUrl(currentStory.user.profileImage)}
-            alt={currentStory.user.nickname}
+            src={getImageUrl(storyUser.profileImage)}
+            alt={storyUser.nickname || '사용자'}
             className="story-user-avatar"
             onError={(e) => (e.target.src = '/default-avatar.png')}
           />
           <div className="story-user-details">
-            <span className="story-user-name">{currentStory.user.nickname}</span>
+            <span className="story-user-name">{storyUser.nickname || '알 수 없음'}</span>
             <span className="story-time">{formatTime(currentStory.createdAt)}</span>
           </div>
         </div>
         <div className="story-header-actions">
-          {currentStory.user._id === user?._id && (
-            <button className="story-delete-btn" onClick={handleDeleteStory} title="스토리 삭제">
+          {storyUser._id === user?._id && (
+            <button
+              className="story-delete-btn"
+              onClick={handleDeleteStory}
+              title="스토리 삭제"
+              disabled={loading}
+            >
               🗑️
             </button>
           )}
@@ -255,13 +347,13 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose, onDelete }) => {
       {/* 스토리 이미지 */}
       <div className="story-content">
         <img
-          src={getImageUrl(currentStory.imageUrl)}
+          src={getImageUrl(storyImageUrl)}
           alt="Story"
           className="story-image"
           onError={(e) => (e.target.src = '/default-avatar.png')}
         />
-        {currentStory.caption && (
-          <div className="story-caption">{currentStory.caption}</div>
+        {storyCaption && (
+          <div className="story-caption">{storyCaption}</div>
         )}
 
         {/* 좋아요 & 댓글 버튼 */}
@@ -269,12 +361,14 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose, onDelete }) => {
           <button
             className={`like-btn ${liked ? 'liked' : ''}`}
             onClick={handleLike}
+            disabled={loading}
           >
             {liked ? '❤️' : '🤍'} {likeCount > 0 && likeCount}
           </button>
           <button
             className="comment-btn"
             onClick={() => setShowComments(!showComments)}
+            disabled={loading}
           >
             💬 {comments.length > 0 && comments.length}
           </button>
@@ -294,8 +388,14 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose, onDelete }) => {
               <p className="no-comments">첫 댓글을 남겨보세요!</p>
             ) : (
               comments.map((comment) => {
-                // 댓글 사용자 정보가 없을 경우 기본값 사용
-                const commentUser = comment.user || { nickname: '알 수 없음', profileImage: null, _id: null };
+                if (!comment || !comment._id) return null;
+
+                const commentUser = comment.user || {
+                  nickname: '알 수 없음',
+                  profileImage: null,
+                  _id: null
+                };
+
                 return (
                   <div key={comment._id} className="comment-item">
                     <img
@@ -309,13 +409,14 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose, onDelete }) => {
                         <span className="comment-author">{commentUser.nickname}</span>
                         <span className="comment-time">{formatTime(comment.createdAt)}</span>
                       </div>
-                      <p className="comment-text">{comment.text}</p>
+                      <p className="comment-text">{comment.text || ''}</p>
                     </div>
-                    {(commentUser._id === user?._id || currentStory.user._id === user?._id) && (
+                    {(commentUser._id === user?._id || storyUser._id === user?._id) && (
                       <button
                         className="delete-comment-btn"
                         onClick={() => handleDeleteComment(comment._id)}
                         title="댓글 삭제"
+                        disabled={loading}
                       >
                         ×
                       </button>
@@ -331,14 +432,18 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose, onDelete }) => {
               type="text"
               placeholder="댓글을 입력하세요..."
               value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
+              onChange={(e) => setCommentText(e.target.value?.slice(0, 500))}
+              onKeyPress={(e) => e.key === 'Enter' && !loading && handleAddComment()}
               onFocus={() => setIsCommentFocused(true)}
               onBlur={() => setIsCommentFocused(false)}
               maxLength={500}
+              disabled={loading}
             />
-            <button onClick={handleAddComment} disabled={!commentText.trim()}>
-              전송
+            <button
+              onClick={handleAddComment}
+              disabled={!commentText?.trim() || loading}
+            >
+              {loading ? '...' : '전송'}
             </button>
           </div>
         </div>

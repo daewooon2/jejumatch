@@ -449,6 +449,46 @@
   cursor: not-allowed;
 }
 
+/* 에러 상태 */
+.story-error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.9);
+  padding: 40px;
+  border-radius: 20px;
+  text-align: center;
+}
+
+.story-error p {
+  color: white;
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+}
+
+.story-error button {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.story-error button:hover {
+  opacity: 0.9;
+  transform: scale(1.05);
+}
+
+/* 로딩 상태 */
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed !important;
+}
+
 /* 반응형 디자인 */
 @media (max-width: 600px) {
   .story-header {
