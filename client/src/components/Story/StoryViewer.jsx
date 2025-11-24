@@ -181,13 +181,18 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
     }
   }, [showComments, isCommentFocused]);
 
+  // 스토리 인덱스가 변경될 때 타이머 리셋
+  useEffect(() => {
+    setProgress(0);
+    pausedTimeRef.current = 0;
+    startTimeRef.current = Date.now();
+  }, [currentIndex]);
+
   useEffect(() => {
     if (isPaused || !currentStory) return;
 
-    startTimeRef.current = Date.now() - pausedTimeRef.current;
-
     const updateProgress = () => {
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current || isPaused) return;
 
       const elapsed = Date.now() - startTimeRef.current;
       const newProgress = Math.min((elapsed / STORY_DURATION) * 100, 100);
@@ -196,13 +201,13 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
 
       if (newProgress >= 100) {
         // 다음 스토리로 이동
-        if (currentIndex < stories.length - 1) {
-          setCurrentIndex(prev => prev + 1);
-          setProgress(0);
-          pausedTimeRef.current = 0;
-        } else {
-          onClose?.();
-        }
+        setTimeout(() => {
+          if (currentIndex < stories.length - 1) {
+            setCurrentIndex(prev => prev + 1);
+          } else {
+            onClose?.();
+          }
+        }, 100);
       } else {
         timerRef.current = requestAnimationFrame(updateProgress);
       }
@@ -215,13 +220,11 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
         cancelAnimationFrame(timerRef.current);
       }
     };
-  }, [currentIndex, isPaused, currentStory, stories.length, onClose]);
+  }, [isPaused, currentStory, currentIndex, stories.length, onClose]);
 
   const nextStory = () => {
     if (currentIndex < stories.length - 1) {
       setCurrentIndex(currentIndex + 1);
-      setProgress(0);
-      pausedTimeRef.current = 0;
     } else {
       onClose?.();
     }
@@ -230,8 +233,6 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
   const prevStory = () => {
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
-      setProgress(0);
-      pausedTimeRef.current = 0;
     }
   };
 
@@ -284,32 +285,32 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
       userId: user?._id
     });
 
+    const trimmedText = commentText.trim();
     setLoading(true);
+
     try {
-      const res = await storyAPI.addComment(currentStory._id, commentText.trim());
+      const res = await storyAPI.addComment(currentStory._id, trimmedText);
       console.log('💬 댓글 전송 응답:', res);
 
-      if (isMountedRef.current) {
-        // 응답 구조 확인
-        const newComment = res?.data?.comment;
+      // 응답 구조 확인
+      const newComment = res?.data?.comment;
 
-        if (newComment) {
-          console.log('✅ 댓글 추가 성공:', newComment);
+      if (newComment) {
+        console.log('✅ 댓글 추가 성공:', newComment);
 
-          // commentsMap에 댓글 추가
-          setCommentsMap(prev => ({
-            ...prev,
-            [currentStory._id]: [...(prev[currentStory._id] || []), newComment]
-          }));
+        // commentsMap에 댓글 추가
+        setCommentsMap(prev => ({
+          ...prev,
+          [currentStory._id]: [...(prev[currentStory._id] || []), newComment]
+        }));
 
-          // Socket.io로 댓글 추가 이벤트 전송
-          addStoryComment(currentStory._id, newComment);
-          setCommentText('');
-          setIsCommentFocused(false);
-        } else {
-          console.error('❌ 응답에 comment가 없습니다:', res?.data);
-          alert('댓글 작성에 실패했습니다. 응답 데이터가 올바르지 않습니다.');
-        }
+        // Socket.io로 댓글 추가 이벤트 전송
+        addStoryComment(currentStory._id, newComment);
+        setCommentText('');
+        setIsCommentFocused(false);
+      } else {
+        console.error('❌ 응답에 comment가 없습니다:', res?.data);
+        alert('댓글 작성에 실패했습니다. 응답 데이터가 올바르지 않습니다.');
       }
     } catch (error) {
       console.error('❌ 댓글 작성 실패:', {
@@ -318,13 +319,10 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
         status: error.response?.status
       });
 
-      if (isMountedRef.current) {
-        alert(error.response?.data?.error || error.message || '댓글 작성에 실패했습니다');
-      }
+      alert(error.response?.data?.error || error.message || '댓글 작성에 실패했습니다');
     } finally {
-      if (isMountedRef.current) {
-        setLoading(false);
-      }
+      // 무조건 로딩 상태 해제
+      setLoading(false);
     }
   };
 
@@ -598,30 +596,32 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
       <div className="story-navigation">
         <div
           className="nav-left"
-          onClick={prevStory}
-          onTouchStart={handlePause}
-          onTouchEnd={handleResume}
-          onMouseDown={handlePause}
-          onMouseUp={handleResume}
-          onMouseLeave={handleResume}
+          onClick={(e) => {
+            e.stopPropagation();
+            prevStory();
+          }}
         >
           {currentIndex > 0 && (
-            <button className="arrow-btn arrow-left">
+            <button className="arrow-btn arrow-left" onClick={(e) => {
+              e.stopPropagation();
+              prevStory();
+            }}>
               ←
             </button>
           )}
         </div>
         <div
           className="nav-right"
-          onClick={nextStory}
-          onTouchStart={handlePause}
-          onTouchEnd={handleResume}
-          onMouseDown={handlePause}
-          onMouseUp={handleResume}
-          onMouseLeave={handleResume}
+          onClick={(e) => {
+            e.stopPropagation();
+            nextStory();
+          }}
         >
           {currentIndex < stories.length - 1 && (
-            <button className="arrow-btn arrow-right">
+            <button className="arrow-btn arrow-right" onClick={(e) => {
+              e.stopPropagation();
+              nextStory();
+            }}>
               →
             </button>
           )}
