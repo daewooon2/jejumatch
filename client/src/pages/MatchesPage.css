@@ -1,29 +1,32 @@
-/* 1. 전체 배경에 로그인 페이지와 같은 그라데이션 적용 */
+/* 1. 배경: 깊이감 있는 그라데이션 */
 body {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: radial-gradient(circle at 10% 20%, rgb(111, 123, 247) 0%, rgb(155, 118, 250) 90%);
   margin: 0;
   min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 .matches-page {
   max-width: 800px;
-  /* 2. 화면 중앙에 카드처럼 뜨도록 여백과 높이 조정 */
   margin: 40px auto;
   padding: 32px;
-  min-height: 80vh;
+  min-height: 85vh;
 
-  /* 3. 로그인 컨테이너와 동일한 흰색 카드 스타일 적용 */
-  background: white;
+  /* 2. 글래스모피즘: 반투명한 유리 질감 */
+  background: rgba(255, 255, 255, 0.85); /* 투명도 85% */
+  backdrop-filter: blur(12px); /* 뒤쪽 배경 흐리게 */
+  -webkit-backdrop-filter: blur(12px);
   border-radius: 24px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.6); /* 유리 테두리 */
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
 }
 
-/* 반응형: 모바일에서는 꽉 차게 보이도록 조정 */
+/* 모바일 대응 */
 @media (max-width: 600px) {
   .matches-page {
     margin: 0;
     border-radius: 0;
-    min-height: 100vh;
+    background: rgba(255, 255, 255, 0.95); /* 모바일은 가독성 위해 덜 투명하게 */
   }
 }
 
@@ -32,73 +35,207 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 32px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid #f0f0f0; /* 선 색상 조금 더 부드럽게 */
+  padding-bottom: 16px;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.05);
 }
 
 .matches-header h1 {
-  font-size: 2rem;
+  font-size: 2.2rem;
   font-weight: 800;
-  margin: 0;
-
-  /* 4. 로그인 페이지 타이틀처럼 텍스트에 그라데이션 적용 */
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #333;
+  letter-spacing: -0.5px;
+  text-shadow: 2px 2px 0px rgba(0,0,0,0.05); /* 텍스트 입체감 */
 }
 
 .back-btn {
   padding: 10px 20px;
-  background: #f8f9fa;
-  border: none;
+  background: white;
+  border: 1px solid rgba(0,0,0,0.05);
   border-radius: 12px;
-  color: #666;
-  font-weight: 600;
+  color: #555;
+  font-weight: 700;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  transition: transform 0.2s;
   cursor: pointer;
-  transition: all 0.3s;
 }
 
 .back-btn:hover {
-  background: #e9ecef;
-  color: #333;
-  transform: translateY(-2px);
+  transform: scale(1.05);
+  color: #667eea;
 }
 
+/* 스토리 섹션 강화 */
+.stories-section {
+  margin-bottom: 40px;
+}
+
+.stories-section h2 {
+  font-size: 1.2rem;
+  margin-bottom: 16px;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 800;
+  padding-left: 8px;
+  border-left: 4px solid #667eea; /* 포인트 라인 */
+}
+
+.stories-grid {
+  display: flex; /* Grid 대신 Flex로 가로 스크롤 느낌 */
+  gap: 20px;
+  overflow-x: auto; /* 가로 스크롤 가능하게 */
+  padding-bottom: 12px; /* 스크롤바 여백 */
+  /* 스크롤바 숨기기 */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.stories-grid::-webkit-scrollbar {
+  display: none;
+}
+
+.story-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  min-width: 90px; /* 크기 고정 */
+  transition: transform 0.3s;
+}
+
+.story-thumbnail {
+  width: 80px;
+  height: 80px;
+  border-radius: 24px;
+  padding: 3px; /* 테두리와 이미지 사이 간격 */
+  background: white; /* 테두리 안쪽 흰색 */
+  position: relative;
+
+  /* 그라데이션 테두리 효과 */
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #e0e0e0;
+  transition: all 0.3s;
+}
+
+/* 읽지 않은 스토리는 화려한 테두리 */
+.story-card:not(.read) .story-thumbnail {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #667eea;
+}
+
+.story-card:hover .story-thumbnail {
+  transform: rotate(-3deg) scale(1.05);
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #764ba2;
+}
+
+.story-thumbnail img {
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+  object-fit: cover;
+}
+
+.add-thumbnail {
+  background: #f0f2f5;
+  border-radius: 20px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #ccc;
+}
+
+.add-thumbnail span {
+  font-size: 2rem;
+  color: #999;
+  font-weight: 300;
+}
+
+.new-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: #ff4757;
+  color: white;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.story-user-name {
+  margin-top: 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #444;
+  text-align: center;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.story-time {
+  font-size: 0.75rem;
+  color: #aaa;
+  text-align: center;
+  margin-top: 2px;
+}
+
+/* 리스트 섹션 강화 */
 .matches-list {
   display: flex;
   flex-direction: column;
-  gap: 16px; /* 간격 넓힘 */
+  gap: 16px;
 }
 
 .match-item {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 16px;
+  gap: 20px;
+  padding: 20px;
   padding-right: 56px;
-  background: white; /* 배경 흰색으로 유지하되 테두리 추가 */
-  border: 1px solid #f0f0f0;
-  border-radius: 16px;
+
+  /* 3. 카드형 UI: 흰색 박스로 띄우기 */
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03); /* 아주 부드러운 그림자 */
+  border: 1px solid rgba(0,0,0,0.02);
+
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
+  overflow: hidden; /* 내부 요소가 튀어나오지 않게 */
 }
 
 .match-item:hover {
-  background: #f8f9ff; /* 호버 시 아주 연한 보라빛 */
-  border-color: #667eea; /* 호버 시 테두리 색상 변경 */
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+  transform: translateY(-5px) scale(1.01);
+  box-shadow: 0 12px 30px rgba(102, 126, 234, 0.15); /* 호버시 그림자 강화 */
+}
+
+/* 호버 시 왼쪽에 포인트 컬러 바 생김 */
+.match-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: linear-gradient(to bottom, #667eea, #764ba2);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.match-item:hover::before {
+  opacity: 1;
 }
 
 .match-item img {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
+  width: 68px;
+  height: 68px;
+  border-radius: 20px; /* 원형 대신 둥근 사각형이 더 현대적 */
   object-fit: cover;
-  border: 2px solid white;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
 .match-info {
@@ -106,14 +243,28 @@ body {
 }
 
 .match-info h3 {
+  font-size: 1.15rem;
   margin: 0 0 6px 0;
-  color: #333;
-  font-size: 1.1rem;
+  color: #222;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 이름 옆에 나이 등 정보가 있다면 작게 표시 */
+.match-info h3 span {
+  font-size: 0.85rem;
+  color: #888;
+  font-weight: 400;
+  background: #f5f5f5;
+  padding: 2px 6px;
+  border-radius: 6px;
 }
 
 .last-message {
-  color: #888;
+  color: #666;
   font-size: 0.95rem;
+  line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -122,15 +273,15 @@ body {
 
 .unread-badge {
   position: absolute;
-  bottom: 16px;
   right: 60px;
-  background: linear-gradient(135deg, #ff6b6b 0%, #ff8787 100%); /* 뱃지도 그라데이션 */
+  bottom: 20px;
+  background: #ff4757;
   color: white;
-  padding: 4px 12px;
-  border-radius: 20px;
+  padding: 6px 12px;
+  border-radius: 12px;
   font-size: 0.8rem;
-  font-weight: bold;
-  box-shadow: 0 4px 10px rgba(255, 107, 107, 0.3);
+  font-weight: 800;
+  box-shadow: 0 4px 10px rgba(255, 71, 87, 0.4);
 }
 
 .cancel-match-btn {
@@ -179,7 +330,7 @@ body {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  border-radius: 50px; /* 더 둥글게 */
+  border-radius: 50px;
   font-weight: bold;
   font-size: 1rem;
   transition: all 0.3s;
@@ -192,99 +343,27 @@ body {
   box-shadow: 0 15px 30px rgba(118, 75, 162, 0.4);
 }
 
-/* 스토리 섹션 */
-.stories-section {
-  margin-bottom: 40px;
-  padding-bottom: 24px;
-  border-bottom: 2px solid #f0f0f0;
-}
-
-.stories-section h2 {
-  font-size: 1.4rem;
-  margin-bottom: 20px;
-  color: #333;
-  font-weight: 700;
-}
-
-.stories-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 20px;
-}
-
-.story-card {
+/* 검색창이나 필터가 없어서 허전하다면? (가상의 스타일 추가) */
+/* HTML에 <div class="filter-bar">...</div> 가 있다면 아래 스타일 적용 */
+.filter-bar {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  transition: transform 0.3s;
+  gap: 10px;
+  margin-bottom: 24px;
+  overflow-x: auto;
 }
 
-.story-card:hover {
-  transform: translateY(-4px);
-}
-
-.story-thumbnail {
-  width: 90px;
-  height: 90px;
-  border-radius: 24px; /* 조금 더 둥글게 */
-  overflow: hidden;
-  position: relative;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-  border: 3px solid transparent; /* 그라데이션 보더를 위한 준비 */
-  background-image: linear-gradient(white, white), linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  background-origin: border-box;
-  background-clip: content-box, border-box;
-}
-
-.story-thumbnail img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.add-thumbnail {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-}
-
-.add-thumbnail span {
-  font-size: 2.5rem;
-  color: white;
-  font-weight: 300;
-}
-
-.new-badge {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  background: #ff6b6b;
-  color: white;
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-size: 0.65rem;
-  font-weight: 800;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-.story-user-name {
-  margin-top: 10px;
-  font-size: 0.85rem;
+.filter-chip {
+  padding: 8px 16px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 20px;
+  font-size: 0.9rem;
   font-weight: 600;
-  color: #444;
-  text-align: center;
-  max-width: 100px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  color: #666;
+  border: 1px solid rgba(0,0,0,0.05);
+  cursor: pointer;
 }
 
-.story-time {
-  font-size: 0.75rem;
-  color: #aaa;
-  text-align: center;
-  margin-top: 2px;
+.filter-chip.active {
+  background: #333;
+  color: white;
 }
