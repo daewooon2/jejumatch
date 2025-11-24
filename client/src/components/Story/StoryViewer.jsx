@@ -278,25 +278,48 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
   const handleAddComment = async () => {
     if (!commentText?.trim() || !currentStory?._id || loading) return;
 
+    console.log('💬 댓글 전송 시작:', {
+      storyId: currentStory._id,
+      text: commentText.trim(),
+      userId: user?._id
+    });
+
     setLoading(true);
     try {
       const res = await storyAPI.addComment(currentStory._id, commentText.trim());
-      if (isMountedRef.current && res?.data?.comment) {
-        const newComment = res.data.comment;
-        // commentsMap에 댓글 추가
-        setCommentsMap(prev => ({
-          ...prev,
-          [currentStory._id]: [...(prev[currentStory._id] || []), newComment]
-        }));
-        // Socket.io로 댓글 추가 이벤트 전송
-        addStoryComment(currentStory._id, newComment);
-        setCommentText('');
-        setIsCommentFocused(false);
+      console.log('💬 댓글 전송 응답:', res);
+
+      if (isMountedRef.current) {
+        // 응답 구조 확인
+        const newComment = res?.data?.comment;
+
+        if (newComment) {
+          console.log('✅ 댓글 추가 성공:', newComment);
+
+          // commentsMap에 댓글 추가
+          setCommentsMap(prev => ({
+            ...prev,
+            [currentStory._id]: [...(prev[currentStory._id] || []), newComment]
+          }));
+
+          // Socket.io로 댓글 추가 이벤트 전송
+          addStoryComment(currentStory._id, newComment);
+          setCommentText('');
+          setIsCommentFocused(false);
+        } else {
+          console.error('❌ 응답에 comment가 없습니다:', res?.data);
+          alert('댓글 작성에 실패했습니다. 응답 데이터가 올바르지 않습니다.');
+        }
       }
     } catch (error) {
-      console.error('댓글 작성 실패:', error);
+      console.error('❌ 댓글 작성 실패:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+
       if (isMountedRef.current) {
-        alert(error.response?.data?.error || '댓글 작성에 실패했습니다');
+        alert(error.response?.data?.error || error.message || '댓글 작성에 실패했습니다');
       }
     } finally {
       if (isMountedRef.current) {

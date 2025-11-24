@@ -322,19 +322,30 @@ router.post('/:storyId/comments', authMiddleware, async (req, res, next) => {
     const userId = req.user.id;
     const { text } = req.body;
 
+    console.log(`💬 댓글 작성 요청 받음:`, {
+      storyId,
+      userId,
+      text,
+      body: req.body,
+      headers: req.headers
+    });
+
     if (!text || !text.trim()) {
+      console.log('❌ 댓글 내용이 비어있음');
       return res.status(400).json({ error: '댓글 내용을 입력해주세요' });
     }
 
     if (text.length > 500) {
+      console.log('❌ 댓글이 너무 김:', text.length);
       return res.status(400).json({ error: '댓글은 500자 이하로 작성해주세요' });
     }
 
-    console.log(`💬 댓글 작성 - 사용자: ${userId}, 스토리: ${storyId}`);
+    console.log(`💬 댓글 작성 - 사용자: ${userId}, 스토리: ${storyId}, 내용: ${text}`);
 
     const story = await Story.findById(storyId);
 
     if (!story) {
+      console.log('❌ 스토리를 찾을 수 없음:', storyId);
       return res.status(404).json({ error: '스토리를 찾을 수 없습니다' });
     }
 
@@ -351,7 +362,13 @@ router.post('/:storyId/comments', authMiddleware, async (req, res, next) => {
     await story.populate('comments.user', 'nickname profileImage');
     const newComment = story.comments[story.comments.length - 1];
 
-    console.log(`✅ 댓글 작성 완료 - 총 댓글: ${story.comments.length}개`);
+    console.log(`✅ 댓글 작성 완료:`, {
+      commentId: newComment._id,
+      userId: newComment.user._id,
+      nickname: newComment.user.nickname,
+      text: newComment.text,
+      totalComments: story.comments.length
+    });
 
     res.json({
       success: true,
@@ -360,7 +377,7 @@ router.post('/:storyId/comments', authMiddleware, async (req, res, next) => {
       commentCount: story.comments.length
     });
   } catch (error) {
-    console.error('❌ 댓글 작성 실패:', error);
+    console.error('❌ 댓글 작성 실패 - 상세 에러:', error.message, error.stack);
     next(error);
   }
 });
