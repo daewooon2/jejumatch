@@ -169,6 +169,15 @@ export const useSocket = () => {
     }
   }, []);
 
+  // 스토리 업데이트 리스너 (업로드/삭제)
+  const onStoryUpdate = useCallback((callback) => {
+    if (socketRef.current) {
+      console.log('👂 story-update 리스너 등록');
+      socketRef.current.off('story-update');
+      socketRef.current.on('story-update', callback);
+    }
+  }, []);
+
   return {
     connected,
     joinMatch,
@@ -184,6 +193,7 @@ export const useSocket = () => {
     toggleStoryLike,
     onStoryCommentAdded,
     onStoryCommentDeleted,
-    onStoryLikeToggled
+    onStoryLikeToggled,
+    onStoryUpdate
   };
 };

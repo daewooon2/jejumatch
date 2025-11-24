@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { matchesAPI, storyAPI } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
+import { useSocket } from '../hooks/useSocket';
 import StoryViewer from '../components/Story/StoryViewer';
 import StoryUpload from '../components/Story/StoryUpload';
 import './MatchesPage.css';
@@ -14,11 +15,34 @@ const MatchesPage = () => {
   const [viewingStories, setViewingStories] = useState(null);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { onStoryUpdate } = useSocket();
 
   useEffect(() => {
     fetchMatches();
     fetchStories();
   }, []);
+
+  // Socket.io 실시간 스토리 업데이트 리스너
+  useEffect(() => {
+    const handleStoryUpdate = (data) => {
+      console.log('📢 스토리 업데이트 이벤트 수신:', data);
+
+      // 다른 사용자의 스토리 변경 시 자동으로 목록 새로고침
+      if (data.action === 'uploaded' || data.action === 'deleted') {
+        fetchStories();
+      }
+    };
+
+    // 리스너 등록
+    if (onStoryUpdate) {
+      onStoryUpdate(handleStoryUpdate);
+    }
+
+    // 클린업
+    return () => {
+      // Socket.io 리스너는 useSocket 내부에서 관리됨
+    };
+  }, [onStoryUpdate]);
 
   const fetchMatches = async () => {
     try {
@@ -36,9 +60,11 @@ const MatchesPage = () => {
       const res = await storyAPI.getStories();
       console.log('스토리 로드 성공:', res.data);
       setStories(res.data.stories || []);
+      return res.data.stories || [];
     } catch (error) {
       console.error('스토리 로드 실패:', error);
       setStories([]);
+      return [];
     }
   };
 
@@ -48,9 +74,19 @@ const MatchesPage = () => {
     }
   };
 
-  const handleStoryDelete = (deletedStoryId) => {
-    // 삭제된 스토리를 목록에서 제거
-    fetchStories();
+  const handleStoryDelete = async (deletedStoryId) => {
+    // 삭제된 스토리를 목록에서 즉시 제거
+    console.log('스토리 삭제됨:', deletedStoryId);
+
+    // 먼저 로컬 상태를 업데이트 (즉시 반영)
+    setStories(prevStories =>
+      prevStories.filter(group =>
+        group.stories.some(story => story._id !== deletedStoryId)
+      )
+    );
+
+    // 그 다음 서버에서 최신 데이터 가져오기
+    await fetchStories();
   };
 
   const handleCancelMatch = async (matchId, matchedUserName, e) => {
@@ -207,9 +243,10 @@ const MatchesPage = () => {
       {showUpload && (
         <StoryUpload
           onClose={() => setShowUpload(false)}
-          onSuccess={() => {
+          onSuccess={async () => {
+            console.log('스토리 업로드 성공, 목록 새로고침 중...');
+            await fetchStories();
             setShowUpload(false);
-            fetchStories();
           }}
         />
       )}

@@ -4,6 +4,35 @@ const { verifyToken } = require('../config/jwt');
 
 // Socket.io 스토리 댓글 핸들러
 const storyHandler = (io) => {
+  // 스토리 변경 알림 (업로드/삭제 시 서버에서 호출)
+  io.emitStoryUpdate = async (userId, action, data) => {
+    try {
+      // 해당 사용자와 매치된 모든 사용자들에게 알림
+      const matches = await Match.find({
+        $or: [{ user1: userId }, { user2: userId }]
+      });
+
+      const userIds = new Set([userId]); // 본인 포함
+      matches.forEach(match => {
+        userIds.add(match.user1.toString());
+        userIds.add(match.user2.toString());
+      });
+
+      // 각 사용자의 소켓에 알림 전송
+      userIds.forEach(uid => {
+        io.to(`user-${uid}`).emit('story-update', {
+          action,
+          userId,
+          data
+        });
+      });
+
+      console.log(`📢 스토리 ${action} 알림 전송 - 사용자: ${userId}`);
+    } catch (error) {
+      console.error('❌ 스토리 업데이트 알림 실패:', error);
+    }
+  };
+
   // chatHandler에서 이미 connection과 authenticate를 처리하므로,
   // 여기서는 기존 socket에 스토리 관련 이벤트만 추가
   io.on('connection', (socket) => {

@@ -37,9 +37,19 @@ const StoryUpload = ({ onClose, onSuccess }) => {
       }
 
       await storyAPI.uploadStory(formData);
-      alert('스토리가 업로드되었습니다! 🎉');
-      if (onSuccess) onSuccess();
+
+      // onSuccess를 먼저 호출하여 목록을 새로고침
+      if (onSuccess) {
+        await onSuccess();
+      }
+
+      // 그 다음에 모달을 닫기
       onClose();
+
+      // 성공 메시지는 마지막에 표시
+      setTimeout(() => {
+        alert('스토리가 업로드되었습니다! 🎉');
+      }, 100);
     } catch (error) {
       console.error('스토리 업로드 실패:', error);
       alert(error.response?.data?.error || '스토리 업로드에 실패했습니다');
