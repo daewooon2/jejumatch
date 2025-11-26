@@ -109,3 +109,10 @@ export const storyAPI = {
   addComment: (storyId, text) => api.post(`/stories/${storyId}/comments`, { text }),
   deleteComment: (storyId, commentId) => api.delete(`/stories/${storyId}/comments/${commentId}`)
 };
+
+export const faceAPI = {
+  analyze: (formData) => api.post('/face/analyze', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 60000 // 60초 타임아웃 (Face++ API가 느릴 수 있음)
+  })
+};

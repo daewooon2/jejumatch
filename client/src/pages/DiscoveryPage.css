@@ -55,6 +55,7 @@ body {
   gap: 12px;
 }
 
+.face-analysis-btn,
 .likes-received-btn,
 .matches-btn,
 .profile-btn {
@@ -66,6 +67,17 @@ body {
   position: relative;
   border: none;
   cursor: pointer;
+}
+
+.face-analysis-btn {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(56, 239, 125, 0.3);
+}
+
+.face-analysis-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(56, 239, 125, 0.4);
 }
 
 .likes-received-btn {
@@ -435,6 +447,7 @@ body {
     width: 100%;
   }
 
+  .face-analysis-btn,
   .likes-received-btn,
   .matches-btn,
   .profile-btn {

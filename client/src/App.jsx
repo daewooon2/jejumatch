@@ -11,6 +11,7 @@ import DiscoveryPage from './pages/DiscoveryPage';
 import MatchesPage from './pages/MatchesPage';
 import ChatRoomPage from './pages/ChatRoomPage';
 import LikesReceivedPage from './pages/LikesReceivedPage';
+import FaceAnalysisPage from './pages/FaceAnalysisPage';
 
 import './assets/styles/global.css';
 
@@ -57,6 +58,12 @@ function App() {
           <Route path="/chat/:matchId" element={
             <ProtectedRoute>
               <ChatRoomPage />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/face-analysis" element={
+            <ProtectedRoute>
+              <FaceAnalysisPage />
             </ProtectedRoute>
           } />
 

@@ -70,6 +70,9 @@ const DiscoveryPage = () => {
       <header className="discovery-header">
         <h1>사용자 탐색</h1>
         <div className="header-buttons">
+          <button onClick={() => navigate('/face-analysis')} className="face-analysis-btn">
+            ✨ AI 얼굴 분석
+          </button>
           <button onClick={() => navigate('/likes-received')} className="likes-received-btn">
             💖 받은 좋아요
             {likesCount > 0 && <span className="notification-badge">{likesCount}</span>}
