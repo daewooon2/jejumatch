@@ -32,8 +32,10 @@ const analyzeCelebrity = async (imageBuffer) => {
   }
 
   try {
+    // Clarifai의 공개 celebrity 모델 사용
+    // user_id: clarifai, app_id: main, model_id: celebrity-face-recognition
     const response = await axios.post(
-      'https://api.clarifai.com/v2/models/celebrity-face-detection/outputs',
+      'https://api.clarifai.com/v2/users/clarifai/apps/main/models/celebrity-face-recognition/outputs',
       {
         inputs: [{
           data: {
@@ -52,15 +54,18 @@ const analyzeCelebrity = async (imageBuffer) => {
       }
     );
 
-    const outputs = response.data?.outputs?.[0];
-    const regions = outputs?.data?.regions;
+    console.log('✅ Clarifai API 응답:', JSON.stringify(response.data, null, 2));
 
-    if (regions && regions.length > 0) {
-      // 첫 번째 얼굴의 닮은꼴 결과
-      const concepts = regions[0]?.data?.concepts;
-      if (concepts && concepts.length > 0) {
-        // 가장 높은 확률의 연예인
-        const topMatch = concepts[0];
+    const outputs = response.data?.outputs?.[0];
+
+    // celebrity 모델은 concepts에 직접 결과를 반환
+    const concepts = outputs?.data?.concepts;
+
+    if (concepts && concepts.length > 0) {
+      // 가장 높은 확률의 연예인 (첫 번째 결과)
+      const topMatch = concepts[0];
+      // 신뢰도가 0.5 이상인 경우만 반환
+      if (topMatch.value >= 0.5) {
         return {
           name: topMatch.name,
           confidence: Math.round(topMatch.value * 100)
@@ -68,6 +73,22 @@ const analyzeCelebrity = async (imageBuffer) => {
       }
     }
 
+    // regions에 있는 경우도 체크 (얼굴 감지 모델의 경우)
+    const regions = outputs?.data?.regions;
+    if (regions && regions.length > 0) {
+      const regionConcepts = regions[0]?.data?.concepts;
+      if (regionConcepts && regionConcepts.length > 0) {
+        const topMatch = regionConcepts[0];
+        if (topMatch.value >= 0.5) {
+          return {
+            name: topMatch.name,
+            confidence: Math.round(topMatch.value * 100)
+          };
+        }
+      }
+    }
+
+    console.log('⚠️ 닮은꼴 연예인을 찾지 못함');
     return null;
   } catch (error) {
     console.error('❌ Clarifai API 에러:', error.response?.data || error.message);
