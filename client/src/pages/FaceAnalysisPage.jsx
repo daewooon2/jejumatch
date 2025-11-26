@@ -209,6 +209,13 @@ const FaceAnalysisPage = () => {
         {/* 분석 결과 */}
         {result && (
           <div className="result-container">
+            {/* 저장 완료 메시지 */}
+            {result.saved && (
+              <div className="save-success-message">
+                ✅ AI 점수가 프로필에 저장되었습니다!
+              </div>
+            )}
+
             {/* 이미지와 얼굴 박스 */}
             <div className="result-image-section">
               <div className="result-image-wrapper">
@@ -321,10 +328,15 @@ const FaceAnalysisPage = () => {
               </div>
             </div>
 
-            {/* 다시 분석 버튼 */}
-            <button className="reset-btn" onClick={handleReset}>
-              🔄 다른 사진으로 분석하기
-            </button>
+            {/* 버튼 영역 */}
+            <div className="result-buttons">
+              <button className="reset-btn" onClick={handleReset}>
+                🔄 다른 사진으로 분석
+              </button>
+              <button className="go-discovery-btn" onClick={() => navigate('/')}>
+                👀 사용자 탐색하기
+              </button>
+            </div>
           </div>
         )}
       </div>

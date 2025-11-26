@@ -2,6 +2,8 @@ const express = require('express');
 const multer = require('multer');
 const FormData = require('form-data');
 const axios = require('axios');
+const authMiddleware = require('../middlewares/auth');
+const User = require('../models/User');
 const router = express.Router();
 
 // 메모리 저장소 사용 (Face++ API로 바로 전송)
@@ -111,10 +113,10 @@ const analyzeSkinStatus = (skinstatus) => {
   }));
 };
 
-// POST /api/face/analyze - 얼굴 분석
-router.post('/analyze', upload.single('image'), async (req, res, next) => {
+// POST /api/face/analyze - 얼굴 분석 및 프로필에 점수 저장
+router.post('/analyze', authMiddleware, upload.single('image'), async (req, res, next) => {
   try {
-    console.log('🔍 얼굴 분석 요청 받음');
+    console.log('🔍 얼굴 분석 요청 받음, userId:', req.userId);
 
     if (!req.file) {
       return res.status(400).json({
@@ -159,12 +161,25 @@ router.post('/analyze', upload.single('image'), async (req, res, next) => {
     // 피부 상태 분석
     const skinAnalysis = analyzeSkinStatus(attributes.skinstatus);
 
+    // 사용자 프로필에 AI 점수 저장
+    const updatedUser = await User.findByIdAndUpdate(
+      req.userId,
+      { aiScore: beautyScore },
+      { new: true }
+    );
+
+    console.log('✅ AI 점수 저장 완료:', {
+      userId: req.userId,
+      aiScore: beautyScore
+    });
+
     // 응답 데이터 구성
     const result = {
       success: true,
       data: {
-        // 얼굴 위치 (이미지 오버레이용)
-        faceRectangle: face.face_rectangle,
+        // 저장된 AI 점수
+        aiScore: beautyScore,
+        saved: true,
 
         // 미용 점수
         beauty: {
@@ -197,12 +212,6 @@ router.post('/analyze', upload.single('image'), async (req, res, next) => {
         faceQuality: {
           value: attributes.facequality.value,
           threshold: attributes.facequality.threshold
-        },
-
-        // 이미지 정보
-        imageInfo: {
-          width: faceData.image_id ? undefined : faceData.image?.width,
-          height: faceData.image_id ? undefined : faceData.image?.height
         }
       }
     };

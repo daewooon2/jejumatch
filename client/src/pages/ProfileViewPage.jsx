@@ -57,13 +57,19 @@ const ProfileViewPage = () => {
     }
   };
 
-  const getImageUrl = (profileImage) => {
-    if (!profileImage) return '/default-avatar.png';
-    if (profileImage.startsWith('http://') || profileImage.startsWith('https://')) {
-      return profileImage;
-    }
-    const API_BASE = process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000';
-    return `${API_BASE}${profileImage}`;
+  // AI 점수 등급 계산
+  const getScoreRating = (score) => {
+    if (!score) return { stars: 0, label: '미평가', color: '#999' };
+    if (score >= 90) return { stars: 5, label: '매우 매력적', color: '#ff6b6b' };
+    if (score >= 80) return { stars: 4, label: '매력적', color: '#ff8c42' };
+    if (score >= 70) return { stars: 3, label: '평균 이상', color: '#ffd93d' };
+    if (score >= 60) return { stars: 2, label: '평균', color: '#6bcb77' };
+    return { stars: 1, label: '발전 가능', color: '#4d96ff' };
+  };
+
+  // 별점 렌더링
+  const renderStars = (count) => {
+    return '⭐'.repeat(count) + '☆'.repeat(5 - count);
   };
 
   if (loading) {
@@ -73,6 +79,8 @@ const ProfileViewPage = () => {
   if (!user) {
     return <div className="error">사용자를 찾을 수 없습니다</div>;
   }
+
+  const rating = getScoreRating(user.aiScore);
 
   return (
     <div className="profile-view-page">
@@ -85,16 +93,21 @@ const ProfileViewPage = () => {
       </header>
 
       <div className="profile-view-container">
-        <div className="profile-image-section">
-          <img
-            src={getImageUrl(user.profileImage)}
-            alt={user.nickname}
-            className="profile-image"
-            onError={(e) => (e.target.src = '/default-avatar.png')}
-          />
-          {user.aiScore && (
-            <div className="ai-score-badge">
-              AI 점수: {user.aiScore}점
+        {/* AI 점수 섹션 (프로필 사진 대신) */}
+        <div className="profile-ai-score-section" style={{ '--score-color': rating.color }}>
+          {user.aiScore ? (
+            <>
+              <div className="profile-score-circle">
+                <span className="profile-score-number">{user.aiScore}</span>
+                <span className="profile-score-unit">점</span>
+              </div>
+              <div className="profile-score-stars">{renderStars(rating.stars)}</div>
+              <div className="profile-score-label">{rating.label}</div>
+            </>
+          ) : (
+            <div className="profile-no-score">
+              <span className="profile-no-score-icon">📷</span>
+              <span className="profile-no-score-text">AI 평가 대기중</span>
             </div>
           )}
         </div>
@@ -108,7 +121,9 @@ const ProfileViewPage = () => {
             {user.major && <p>📚 {user.major}</p>}
             {user.mbti && <p>🧠 {user.mbti}</p>}
             {user.region && <p>📍 {user.region}</p>}
-            {user.hobbies && <p>🎨 {user.hobbies}</p>}
+            {user.hobbies && user.hobbies.length > 0 && (
+              <p>🎨 {Array.isArray(user.hobbies) ? user.hobbies.join(', ') : user.hobbies}</p>
+            )}
           </div>
 
           <div className="profile-stats">
@@ -116,6 +131,12 @@ const ProfileViewPage = () => {
               <span className="stat-label">받은 좋아요</span>
               <span className="stat-value">{user.likesCount || 0}</span>
             </div>
+            {user.aiScore && (
+              <div className="stat-item">
+                <span className="stat-label">AI 점수</span>
+                <span className="stat-value" style={{ color: rating.color }}>{user.aiScore}점</span>
+              </div>
+            )}
           </div>
         </div>
 
