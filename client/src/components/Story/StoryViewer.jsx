@@ -503,17 +503,27 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
         <div className="story-actions">
           <button
             className={`like-btn ${liked ? 'liked' : ''}`}
-            onClick={handleLike}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleLike();
+            }}
             disabled={loading}
+            type="button"
           >
-            {liked ? '❤️' : '🤍'} {likeCount > 0 && likeCount}
+            {liked ? '❤️' : '🤍'}
+            {likeCount > 0 && <span className="action-count">{likeCount}</span>}
           </button>
           <button
             className="comment-btn"
-            onClick={() => setShowComments(!showComments)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowComments(!showComments);
+            }}
             disabled={loading}
+            type="button"
           >
-            💬 {currentComments.length > 0 && currentComments.length}
+            💬
+            {currentComments.length > 0 && <span className="action-count">{currentComments.length}</span>}
           </button>
         </div>
       </div>

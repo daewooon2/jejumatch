@@ -237,8 +237,8 @@
   z-index: 20; /* 네비게이션보다 높은 z-index */
 }
 
-.like-btn,
-.comment-btn {
+.story-actions .like-btn,
+.story-actions .comment-btn {
   width: 50px;
   height: 50px;
   border-radius: 50%;
@@ -252,17 +252,28 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s;
+  padding: 0;
+  margin: 0;
 }
 
-.like-btn:hover,
-.comment-btn:hover {
+.story-actions .like-btn:hover,
+.story-actions .comment-btn:hover {
   background: rgba(0,0,0,0.7);
   border-color: rgba(255,255,255,0.6);
   transform: scale(1.1);
 }
 
-.like-btn.liked {
+.story-actions .like-btn.liked {
   animation: heartBeat 0.3s;
+  background: rgba(255, 107, 107, 0.6);
+  border-color: rgba(255, 107, 107, 0.8);
+}
+
+/* 버튼 내 숫자 카운트 */
+.story-actions .action-count {
+  font-size: 0.7rem;
+  margin-left: 2px;
+  font-weight: 600;
 }
 
 @keyframes heartBeat {
@@ -513,8 +524,8 @@ button:disabled {
     right: 12px;
   }
 
-  .like-btn,
-  .comment-btn {
+  .story-actions .like-btn,
+  .story-actions .comment-btn {
     width: 44px;
     height: 44px;
     font-size: 1.3rem;
