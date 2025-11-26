@@ -64,13 +64,12 @@ const analyzeCelebrity = async (imageBuffer) => {
     if (concepts && concepts.length > 0) {
       // 가장 높은 확률의 연예인 (첫 번째 결과)
       const topMatch = concepts[0];
-      // 신뢰도가 0.5 이상인 경우만 반환
-      if (topMatch.value >= 0.5) {
-        return {
-          name: topMatch.name,
-          confidence: Math.round(topMatch.value * 100)
-        };
-      }
+      // 신뢰도 조건 없이 항상 반환 (낮은 신뢰도도 표시)
+      const confidence = Math.round(topMatch.value * 100);
+      return {
+        name: topMatch.name,
+        confidence: confidence > 0 ? confidence : 1  // 최소 1%로 표시
+      };
     }
 
     // regions에 있는 경우도 체크 (얼굴 감지 모델의 경우)
@@ -79,12 +78,11 @@ const analyzeCelebrity = async (imageBuffer) => {
       const regionConcepts = regions[0]?.data?.concepts;
       if (regionConcepts && regionConcepts.length > 0) {
         const topMatch = regionConcepts[0];
-        if (topMatch.value >= 0.5) {
-          return {
-            name: topMatch.name,
-            confidence: Math.round(topMatch.value * 100)
-          };
-        }
+        const confidence = Math.round(topMatch.value * 100);
+        return {
+          name: topMatch.name,
+          confidence: confidence > 0 ? confidence : 1
+        };
       }
     }
 
