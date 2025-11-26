@@ -271,10 +271,6 @@ const FaceAnalysisPage = () => {
                   <span className="info-label">미소 지수</span>
                   <span className="info-value">{Math.round(result.smile.value)}%</span>
                 </div>
-                <div className="info-item">
-                  <span className="info-label">얼굴 품질</span>
-                  <span className="info-value">{Math.round(result.faceQuality.value)}%</span>
-                </div>
               </div>
             </div>
 
@@ -298,31 +294,6 @@ const FaceAnalysisPage = () => {
                       />
                     </div>
                     <span className="emotion-bar-value">{Math.round(emotion.value)}%</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* 피부 상태 카드 */}
-            <div className="result-card skin-card">
-              <h3>✨ 피부 상태</h3>
-              <div className="skin-grid">
-                {result.skin.map((item) => (
-                  <div key={item.name} className={`skin-item ${item.status}`}>
-                    <span className="skin-name">{item.name}</span>
-                    <div className="skin-progress">
-                      <div
-                        className="skin-progress-fill"
-                        style={{
-                          width: `${item.value}%`,
-                          backgroundColor: getProgressColor(
-                            item.value,
-                            item.name !== '건강도'
-                          )
-                        }}
-                      />
-                    </div>
-                    <span className="skin-value">{Math.round(item.value)}%</span>
                   </div>
                 ))}
               </div>

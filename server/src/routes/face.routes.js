@@ -35,7 +35,7 @@ const analyzeFace = async (imageBuffer) => {
   formData.append('api_key', apiKey);
   formData.append('api_secret', apiSecret);
   formData.append('image_base64', imageBuffer.toString('base64'));
-  formData.append('return_attributes', 'gender,age,smile,emotion,beauty,skinstatus,facequality');
+  formData.append('return_attributes', 'gender,age,smiling,emotion,beauty');
 
   const response = await axios.post(
     'https://api-us.faceplusplus.com/facepp/v3/detect',
@@ -158,9 +158,6 @@ router.post('/analyze', authMiddleware, upload.single('image'), async (req, res,
     // 감정 분석
     const emotionAnalysis = translateEmotion(attributes.emotion);
 
-    // 피부 상태 분석
-    const skinAnalysis = analyzeSkinStatus(attributes.skinstatus);
-
     // 사용자 프로필에 AI 점수 저장
     const updatedUser = await User.findByIdAndUpdate(
       req.userId,
@@ -201,17 +198,8 @@ router.post('/analyze', authMiddleware, upload.single('image'), async (req, res,
 
         // 미소 정도
         smile: {
-          value: attributes.smile.value,
-          threshold: attributes.smile.threshold
-        },
-
-        // 피부 상태
-        skin: skinAnalysis,
-
-        // 얼굴 품질
-        faceQuality: {
-          value: attributes.facequality.value,
-          threshold: attributes.facequality.threshold
+          value: attributes.smiling?.value || 0,
+          threshold: attributes.smiling?.threshold || 50
         }
       }
     };
