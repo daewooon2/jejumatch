@@ -11,6 +11,8 @@
   transition: var(--transition-smooth);
   cursor: pointer;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .user-card:hover {
@@ -193,9 +195,9 @@
 }
 
 /* Like Button */
-.like-btn {
+.user-card .like-btn {
   width: 100%;
-  padding: 12px;
+  padding: 14px;
   background: var(--primary-gradient);
   color: white;
   font-weight: var(--font-bold);
@@ -205,25 +207,27 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   border: none;
   cursor: pointer;
+  margin-top: auto;
 }
 
-.like-btn:hover:not(:disabled) {
-  filter: brightness(1.05);
+.user-card .like-btn:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: scale(1.02);
 }
 
-.like-btn.liked {
+.user-card .like-btn.liked {
   background: linear-gradient(135deg, #ff6b6b 0%, #ff8787 100%);
 }
 
-.like-btn:disabled {
+.user-card .like-btn:disabled {
   cursor: not-allowed;
-  opacity: 0.9;
+  opacity: 0.85;
 }
 
-.like-btn.liked:hover {
+.user-card .like-btn.liked:hover {
   animation: heartBeat 0.6s ease-in-out;
 }
 
