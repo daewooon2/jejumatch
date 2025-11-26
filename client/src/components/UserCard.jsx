@@ -9,6 +9,7 @@ const UserCard = ({ user, onLike, onClick }) => {
   const college = user?.college;
   const mbti = user?.mbti;
   const aiScore = user?.aiScore;
+  const celebrityLookalike = user?.celebrityLookalike;
   const likesCount = user?.likesCount ?? 0;
   const isLikedByMe = user?.isLikedByMe || false;
   const userId = user?.id || user?._id;
@@ -42,6 +43,13 @@ const UserCard = ({ user, onLike, onClick }) => {
             </div>
             <div className="score-stars">{renderStars(rating.stars)}</div>
             <div className="score-label">{rating.label}</div>
+            {celebrityLookalike?.name && (
+              <div className="celebrity-lookalike">
+                <span className="celebrity-icon">🌟</span>
+                <span className="celebrity-name">{celebrityLookalike.name}</span>
+                <span className="celebrity-match">닮음 {celebrityLookalike.confidence}%</span>
+              </div>
+            )}
           </>
         ) : (
           <div className="no-score">

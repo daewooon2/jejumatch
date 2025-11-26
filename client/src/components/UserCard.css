@@ -113,6 +113,37 @@
   z-index: 1;
 }
 
+/* Celebrity Lookalike */
+.ai-score-section .celebrity-lookalike {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: rgba(255, 215, 0, 0.25);
+  border-radius: var(--radius-full);
+  position: relative;
+  z-index: 1;
+  border: 1px solid rgba(255, 215, 0, 0.4);
+}
+
+.ai-score-section .celebrity-icon {
+  font-size: 0.9rem;
+}
+
+.ai-score-section .celebrity-name {
+  font-size: 0.8rem;
+  font-weight: var(--font-bold);
+  color: white;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.ai-score-section .celebrity-match {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: var(--font-medium);
+}
+
 /* No Score State */
 .ai-score-section .no-score {
   display: flex;

@@ -255,6 +255,26 @@ const FaceAnalysisPage = () => {
               </div>
             </div>
 
+            {/* 닮은꼴 연예인 카드 */}
+            {result.celebrityLookalike && (
+              <div className="result-card celebrity-card">
+                <h3>🌟 닮은꼴 연예인</h3>
+                <div className="celebrity-result">
+                  <span className="celebrity-name">{result.celebrityLookalike.name}</span>
+                  <div className="celebrity-confidence">
+                    <span className="confidence-label">유사도</span>
+                    <div className="confidence-bar">
+                      <div
+                        className="confidence-fill"
+                        style={{ width: `${result.celebrityLookalike.confidence}%` }}
+                      />
+                    </div>
+                    <span className="confidence-value">{result.celebrityLookalike.confidence}%</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* 기본 정보 카드 */}
             <div className="result-card info-card">
               <h3>👤 기본 정보</h3>

@@ -54,6 +54,10 @@ const userSchema = new mongoose.Schema({
     max: 100,
     default: null
   },
+  celebrityLookalike: {
+    name: { type: String, default: null },
+    confidence: { type: Number, default: null }
+  },
   likedUsers: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'

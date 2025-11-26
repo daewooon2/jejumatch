@@ -22,6 +22,59 @@ const upload = multer({
   }
 });
 
+// Clarifai 닮은꼴 연예인 분석 함수
+const analyzeCelebrity = async (imageBuffer) => {
+  const PAT = process.env.CLARIFAI_PAT;
+
+  if (!PAT) {
+    console.log('⚠️ Clarifai PAT가 설정되지 않음, 닮은꼴 분석 스킵');
+    return null;
+  }
+
+  try {
+    const response = await axios.post(
+      'https://api.clarifai.com/v2/models/celebrity-face-detection/outputs',
+      {
+        inputs: [{
+          data: {
+            image: {
+              base64: imageBuffer.toString('base64')
+            }
+          }
+        }]
+      },
+      {
+        headers: {
+          'Authorization': `Key ${PAT}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: 30000
+      }
+    );
+
+    const outputs = response.data?.outputs?.[0];
+    const regions = outputs?.data?.regions;
+
+    if (regions && regions.length > 0) {
+      // 첫 번째 얼굴의 닮은꼴 결과
+      const concepts = regions[0]?.data?.concepts;
+      if (concepts && concepts.length > 0) {
+        // 가장 높은 확률의 연예인
+        const topMatch = concepts[0];
+        return {
+          name: topMatch.name,
+          confidence: Math.round(topMatch.value * 100)
+        };
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error('❌ Clarifai API 에러:', error.response?.data || error.message);
+    return null;
+  }
+};
+
 // Face++ API 호출 함수
 const analyzeFace = async (imageBuffer) => {
   const apiKey = process.env.FACE_PLUS_PLUS_API_KEY;
@@ -130,12 +183,16 @@ router.post('/analyze', authMiddleware, upload.single('image'), async (req, res,
       size: `${(req.file.size / 1024).toFixed(2)} KB`
     });
 
-    // Face++ API 호출
-    const faceData = await analyzeFace(req.file.buffer);
+    // Face++ API와 Clarifai API 동시 호출
+    const [faceData, celebrityData] = await Promise.all([
+      analyzeFace(req.file.buffer),
+      analyzeCelebrity(req.file.buffer)
+    ]);
 
     console.log('✅ Face++ API 응답:', {
       faces_count: faceData.faces?.length || 0
     });
+    console.log('✅ Clarifai 닮은꼴 결과:', celebrityData);
 
     // 얼굴이 감지되지 않은 경우
     if (!faceData.faces || faceData.faces.length === 0) {
@@ -158,16 +215,22 @@ router.post('/analyze', authMiddleware, upload.single('image'), async (req, res,
     // 감정 분석
     const emotionAnalysis = translateEmotion(attributes.emotion);
 
-    // 사용자 프로필에 AI 점수 저장
+    // 사용자 프로필에 AI 점수와 닮은꼴 연예인 저장
+    const updateData = { aiScore: beautyScore };
+    if (celebrityData) {
+      updateData.celebrityLookalike = celebrityData;
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
       req.userId,
-      { aiScore: beautyScore },
+      updateData,
       { new: true }
     );
 
     console.log('✅ AI 점수 저장 완료:', {
       userId: req.userId,
-      aiScore: beautyScore
+      aiScore: beautyScore,
+      celebrityLookalike: celebrityData
     });
 
     // 응답 데이터 구성
@@ -200,7 +263,10 @@ router.post('/analyze', authMiddleware, upload.single('image'), async (req, res,
         smile: {
           value: attributes.smiling?.value || 0,
           threshold: attributes.smiling?.threshold || 50
-        }
+        },
+
+        // 닮은꼴 연예인 (Clarifai)
+        celebrityLookalike: celebrityData
       }
     };
 
