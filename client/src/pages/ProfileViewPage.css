@@ -1,65 +1,79 @@
+/* ============================================
+   Profile View Page Styles
+   ============================================ */
+
 .profile-view-page {
-  max-width: 800px;
+  max-width: 600px;
   margin: 40px auto;
   padding: 32px;
   min-height: 85vh;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
 }
 
+@media (max-width: 768px) {
+  .profile-view-page {
+    margin: 0;
+    border-radius: 0;
+    padding: 20px;
+    background: var(--glass-bg-mobile);
+  }
+}
+
+/* Header */
 .profile-view-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
   padding-bottom: 16px;
-  border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 2px solid var(--border-light);
 }
 
 .profile-view-header h1 {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #333;
+  font-size: 1.6rem;
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
 }
 
-.back-btn {
+.profile-view-header .back-btn {
   padding: 10px 20px;
-  background: white;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 50px;
-  font-weight: 600;
-  color: #555;
+  background: var(--bg-white);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-full);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.3s;
+  transition: var(--transition-normal);
 }
 
-.back-btn:hover {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.profile-view-header .back-btn:hover {
+  background: var(--primary-gradient);
   color: white;
   border-color: transparent;
-  transform: translateX(-2px);
 }
 
+/* Container */
 .profile-view-container {
-  background: white;
-  border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  background: var(--bg-white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
   overflow: hidden;
 }
 
-/* AI 점수 섹션 (프로필 사진 대신) */
+/* AI Score Section */
 .profile-ai-score-section {
   width: 100%;
-  height: 280px;
+  height: 240px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--primary-gradient);
   position: relative;
   overflow: hidden;
 }
@@ -71,128 +85,126 @@
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 60%);
   animation: shimmer 3s ease-in-out infinite;
 }
 
-@keyframes shimmer {
-  0%, 100% { transform: translate(0, 0); }
-  50% { transform: translate(10%, 10%); }
-}
-
-/* 점수 원형 */
+/* Score Circle */
 .profile-score-circle {
-  width: 140px;
-  height: 140px;
+  width: 120px;
+  height: 120px;
   background: rgba(255, 255, 255, 0.95);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.18);
   position: relative;
   z-index: 1;
 }
 
 .profile-score-number {
-  font-size: 3.5rem;
-  font-weight: 800;
-  color: var(--score-color, #667eea);
+  font-size: 3rem;
+  font-weight: var(--font-extrabold);
+  color: var(--score-color, var(--primary-color));
   line-height: 1;
 }
 
 .profile-score-unit {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #666;
+  font-size: 1rem;
+  font-weight: var(--font-semibold);
+  color: var(--text-muted);
   margin-left: 2px;
   align-self: flex-end;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
-/* 별점 */
+/* Stars */
 .profile-score-stars {
-  margin-top: 16px;
-  font-size: 1.4rem;
-  letter-spacing: 4px;
+  margin-top: 14px;
+  font-size: 1.2rem;
+  letter-spacing: 3px;
   position: relative;
   z-index: 1;
 }
 
-/* 등급 라벨 */
+/* Label */
 .profile-score-label {
-  margin-top: 10px;
-  font-size: 1.1rem;
-  font-weight: 700;
+  margin-top: 8px;
+  font-size: 1rem;
+  font-weight: var(--font-bold);
   color: white;
-  padding: 6px 20px;
+  padding: 6px 18px;
   background: rgba(255, 255, 255, 0.2);
-  border-radius: 25px;
+  border-radius: var(--radius-full);
   position: relative;
   z-index: 1;
 }
 
-/* 미평가 상태 */
+/* No Score */
 .profile-no-score {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   position: relative;
   z-index: 1;
 }
 
 .profile-no-score-icon {
-  font-size: 4rem;
+  font-size: 3.5rem;
   opacity: 0.8;
 }
 
 .profile-no-score-text {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   color: rgba(255, 255, 255, 0.9);
-  font-weight: 600;
-  padding: 8px 20px;
+  font-weight: var(--font-semibold);
+  padding: 8px 18px;
   background: rgba(255, 255, 255, 0.2);
-  border-radius: 25px;
+  border-radius: var(--radius-full);
 }
 
+/* Info Section */
 .profile-info-section {
   padding: 28px;
 }
 
 .profile-info-section h2 {
-  font-size: 2rem;
+  font-size: 1.8rem;
   margin-bottom: 20px;
-  color: #333;
-  font-weight: 700;
+  color: var(--text-primary);
+  font-weight: var(--font-bold);
   text-align: center;
 }
 
+/* Details */
 .profile-details {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   margin-bottom: 24px;
-  padding: 20px;
-  background: #f9f9f9;
-  border-radius: 16px;
+  padding: 18px;
+  background: var(--bg-light);
+  border-radius: var(--radius-lg);
 }
 
 .profile-details p {
-  font-size: 1.05rem;
-  color: #555;
+  font-size: 1rem;
+  color: var(--text-secondary);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
+/* Stats */
 .profile-stats {
   display: flex;
-  gap: 24px;
-  padding: 20px;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
-  border-radius: 16px;
-  margin-bottom: 24px;
+  gap: 20px;
+  padding: 18px;
+  background: rgba(102, 126, 234, 0.05);
+  border-radius: var(--radius-lg);
+  margin-bottom: 20px;
   justify-content: center;
 }
 
@@ -200,118 +212,113 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 12px 24px;
+  gap: 4px;
+  padding: 10px 20px;
 }
 
 .stat-label {
-  font-size: 0.9rem;
-  color: #888;
-  font-weight: 500;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: var(--font-medium);
 }
 
 .stat-value {
-  font-size: 1.8rem;
-  font-weight: 800;
-  color: #667eea;
+  font-size: 1.5rem;
+  font-weight: var(--font-extrabold);
+  color: var(--primary-color);
 }
 
+/* Actions */
 .profile-actions {
   padding: 0 28px 28px;
   display: flex;
   gap: 12px;
 }
 
-.like-btn,
-.unlike-btn,
-.edit-btn {
+.profile-actions .like-btn,
+.profile-actions .unlike-btn,
+.profile-actions .edit-btn {
   flex: 1;
-  padding: 16px;
-  border-radius: 16px;
-  font-size: 1.1rem;
-  font-weight: 700;
+  padding: 14px;
+  border-radius: var(--radius-lg);
+  font-size: 1rem;
+  font-weight: var(--font-bold);
   border: none;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: var(--transition-smooth);
 }
 
-.like-btn {
+.profile-actions .like-btn {
   background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
   color: white;
   box-shadow: 0 4px 15px rgba(238, 90, 111, 0.3);
 }
 
-.like-btn:hover {
+.profile-actions .like-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(238, 90, 111, 0.4);
 }
 
-.unlike-btn {
+.profile-actions .unlike-btn {
+  background: var(--bg-gray);
+  color: var(--text-secondary);
+}
+
+.profile-actions .unlike-btn:hover {
   background: #e0e0e0;
-  color: #666;
 }
 
-.unlike-btn:hover {
-  background: #d0d0d0;
-  transform: translateY(-2px);
-}
-
-.edit-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.profile-actions .edit-btn {
+  background: var(--primary-gradient);
   color: white;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  box-shadow: var(--shadow-primary);
 }
 
-.edit-btn:hover {
+.profile-actions .edit-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: var(--shadow-primary-hover);
 }
 
+/* Error */
 .error {
   text-align: center;
   padding: 80px 20px;
-  font-size: 1.2rem;
-  color: #999;
+  font-size: 1.1rem;
+  color: var(--text-muted);
 }
 
-/* 반응형 */
+/* Responsive */
 @media (max-width: 768px) {
-  .profile-view-page {
-    margin: 0;
-    border-radius: 0;
-    padding: 20px;
-    background: rgba(255, 255, 255, 0.95);
-  }
-
   .profile-ai-score-section {
-    height: 240px;
+    height: 200px;
   }
 
   .profile-score-circle {
-    width: 120px;
-    height: 120px;
+    width: 100px;
+    height: 100px;
   }
 
   .profile-score-number {
-    font-size: 3rem;
+    font-size: 2.5rem;
   }
 
   .profile-info-section h2 {
-    font-size: 1.6rem;
-  }
-
-  .profile-details p {
-    font-size: 1rem;
+    font-size: 1.5rem;
   }
 
   .profile-stats {
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
   }
 
   .stat-item {
     flex-direction: row;
     justify-content: space-between;
-    padding: 12px 16px;
+    padding: 10px 14px;
+  }
+
+  .profile-actions {
+    flex-direction: column;
+    padding: 0 20px 20px;
   }
 }

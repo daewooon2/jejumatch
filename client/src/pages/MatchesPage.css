@@ -1,91 +1,85 @@
-/* 1. 배경: 깊이감 있는 그라데이션 */
-body {
-  background: radial-gradient(circle at 10% 20%, rgb(111, 123, 247) 0%, rgb(155, 118, 250) 90%);
-  margin: 0;
-  min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
+/* ============================================
+   Matches Page Styles
+   ============================================ */
 
 .matches-page {
   max-width: 800px;
   margin: 40px auto;
   padding: 32px;
   min-height: 85vh;
-
-  /* 2. 글래스모피즘: 반투명한 유리 질감 */
-  background: rgba(255, 255, 255, 0.85); /* 투명도 85% */
-  backdrop-filter: blur(12px); /* 뒤쪽 배경 흐리게 */
-  -webkit-backdrop-filter: blur(12px);
-  border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.6); /* 유리 테두리 */
-  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
 }
 
-/* 모바일 대응 */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .matches-page {
     margin: 0;
     border-radius: 0;
-    background: rgba(255, 255, 255, 0.95); /* 모바일은 가독성 위해 덜 투명하게 */
+    padding: 20px;
+    background: var(--glass-bg-mobile);
   }
 }
 
+/* Header */
 .matches-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 32px;
   padding-bottom: 16px;
-  border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 2px solid var(--border-light);
 }
 
 .matches-header h1 {
-  font-size: 2.2rem;
-  font-weight: 800;
-  color: #333;
+  font-size: 2rem;
+  font-weight: var(--font-extrabold);
+  color: var(--text-primary);
   letter-spacing: -0.5px;
-  text-shadow: 2px 2px 0px rgba(0,0,0,0.05); /* 텍스트 입체감 */
 }
 
-.back-btn {
+.matches-header .back-btn {
   padding: 10px 20px;
-  background: white;
-  border: 1px solid rgba(0,0,0,0.05);
-  border-radius: 12px;
-  color: #555;
-  font-weight: 700;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-  transition: transform 0.2s;
+  background: var(--bg-white);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-full);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
   cursor: pointer;
+  transition: var(--transition-normal);
 }
 
-.back-btn:hover {
-  transform: scale(1.05);
-  color: #667eea;
+.matches-header .back-btn:hover {
+  background: var(--primary-gradient);
+  color: white;
+  border-color: transparent;
 }
 
-/* 스토리 섹션 강화 */
+/* Stories Section */
 .stories-section {
-  margin-bottom: 40px;
+  margin-bottom: 32px;
 }
 
 .stories-section h2 {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   margin-bottom: 16px;
-  color: #555;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 1px;
-  font-weight: 800;
-  padding-left: 8px;
-  border-left: 4px solid #667eea; /* 포인트 라인 */
+  font-weight: var(--font-extrabold);
+  padding-left: 10px;
+  border-left: 4px solid var(--primary-color);
 }
 
+/* Stories Grid */
 .stories-grid {
-  display: flex; /* Grid 대신 Flex로 가로 스크롤 느낌 */
+  display: flex;
   gap: 20px;
-  overflow-x: auto; /* 가로 스크롤 가능하게 */
-  padding-bottom: 12px; /* 스크롤바 여백 */
-  /* 스크롤바 숨기기 */
+  overflow-x: auto;
+  padding-bottom: 12px;
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
@@ -94,276 +88,375 @@ body {
   display: none;
 }
 
+/* Story Card */
 .story-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   cursor: pointer;
-  min-width: 90px; /* 크기 고정 */
-  transition: transform 0.3s;
+  min-width: 90px;
+  transition: var(--transition-normal);
+}
+
+.story-card:hover {
+  transform: translateY(-4px);
 }
 
 .story-thumbnail {
   width: 80px;
   height: 80px;
-  border-radius: 24px;
-  padding: 3px; /* 테두리와 이미지 사이 간격 */
-  background: white; /* 테두리 안쪽 흰색 */
+  border-radius: var(--radius-xl);
+  padding: 3px;
+  background: var(--bg-white);
   position: relative;
-
-  /* 그라데이션 테두리 효과 */
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #e0e0e0;
-  transition: all 0.3s;
+  box-shadow: 0 0 0 2px white, 0 0 0 4px var(--border-medium);
+  transition: var(--transition-normal);
 }
 
-/* 읽지 않은 스토리는 화려한 테두리 */
+/* Unread story border */
 .story-card:not(.read) .story-thumbnail {
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #667eea;
+  box-shadow: 0 0 0 2px white, 0 0 0 4px var(--primary-color);
 }
 
 .story-card:hover .story-thumbnail {
   transform: rotate(-3deg) scale(1.05);
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #764ba2;
+  box-shadow: 0 0 0 2px white, 0 0 0 4px var(--secondary-color);
 }
 
 .story-thumbnail img {
   width: 100%;
   height: 100%;
-  border-radius: 20px;
+  border-radius: calc(var(--radius-xl) - 4px);
   object-fit: cover;
 }
 
 .add-thumbnail {
-  background: #f0f2f5;
-  border-radius: 20px;
+  background: var(--bg-gray);
+  border-radius: calc(var(--radius-xl) - 4px);
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px dashed #ccc;
+  border: 2px dashed var(--border-medium);
 }
 
 .add-thumbnail span {
   font-size: 2rem;
-  color: #999;
+  color: var(--text-light);
   font-weight: 300;
 }
 
 .new-badge {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  background: #ff4757;
+  top: 4px;
+  right: 4px;
+  background: var(--accent-red);
   color: white;
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-size: 0.65rem;
-  font-weight: 800;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 0.6rem;
+  font-weight: var(--font-bold);
+  box-shadow: 0 2px 4px rgba(255, 68, 68, 0.4);
 }
 
 .story-user-name {
-  margin-top: 12px;
+  margin-top: 10px;
   font-size: 0.8rem;
-  font-weight: 700;
-  color: #444;
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
   text-align: center;
-  max-width: 100px;
+  max-width: 90px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .story-time {
-  font-size: 0.75rem;
-  color: #aaa;
+  font-size: 0.7rem;
+  color: var(--text-light);
   text-align: center;
   margin-top: 2px;
 }
 
-/* 리스트 섹션 강화 */
+/* Matches List */
 .matches-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
+/* Match Item */
 .match-item {
   display: flex;
   align-items: center;
-  gap: 20px;
-  padding: 20px;
+  gap: 18px;
+  padding: 18px;
   padding-right: 56px;
-
-  /* 3. 카드형 UI: 흰색 박스로 띄우기 */
-  background: white;
-  border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03); /* 아주 부드러운 그림자 */
-  border: 1px solid rgba(0,0,0,0.02);
-
+  background: var(--bg-white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: var(--transition-smooth);
   position: relative;
-  overflow: hidden; /* 내부 요소가 튀어나오지 않게 */
+  overflow: hidden;
 }
 
 .match-item:hover {
-  transform: translateY(-5px) scale(1.01);
-  box-shadow: 0 12px 30px rgba(102, 126, 234, 0.15); /* 호버시 그림자 강화 */
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
 }
 
-/* 호버 시 왼쪽에 포인트 컬러 바 생김 */
+/* Hover accent bar */
 .match-item::before {
   content: '';
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
-  width: 6px;
-  background: linear-gradient(to bottom, #667eea, #764ba2);
+  width: 5px;
+  background: var(--primary-gradient);
   opacity: 0;
-  transition: opacity 0.3s;
+  transition: opacity var(--transition-normal);
 }
 
 .match-item:hover::before {
   opacity: 1;
 }
 
-.match-item img {
-  width: 68px;
-  height: 68px;
-  border-radius: 20px; /* 원형 대신 둥근 사각형이 더 현대적 */
-  object-fit: cover;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+/* Match Avatar - AI Score Display */
+.match-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-lg);
+  background: var(--primary-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  flex-shrink: 0;
 }
 
+.match-avatar .score-value {
+  font-size: 1.5rem;
+  font-weight: var(--font-extrabold);
+  color: white;
+}
+
+.match-avatar .no-score {
+  font-size: 1.5rem;
+  opacity: 0.8;
+}
+
+.match-item img {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-lg);
+  object-fit: cover;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Match Info */
 .match-info {
   flex: 1;
+  min-width: 0;
 }
 
 .match-info h3 {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   margin: 0 0 6px 0;
-  color: #222;
+  color: var(--text-primary);
+  font-weight: var(--font-bold);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
-/* 이름 옆에 나이 등 정보가 있다면 작게 표시 */
 .match-info h3 span {
-  font-size: 0.85rem;
-  color: #888;
-  font-weight: 400;
-  background: #f5f5f5;
-  padding: 2px 6px;
-  border-radius: 6px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: var(--font-medium);
+  background: var(--bg-gray);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
 }
 
 .last-message {
-  color: #666;
-  font-size: 0.95rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 350px;
 }
 
+/* Unread Badge */
 .unread-badge {
   position: absolute;
-  right: 60px;
-  bottom: 20px;
-  background: #ff4757;
+  right: 56px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--accent-red);
   color: white;
-  padding: 6px 12px;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 800;
-  box-shadow: 0 4px 10px rgba(255, 71, 87, 0.4);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: var(--font-bold);
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
 }
 
+/* Cancel Button */
 .cancel-match-btn {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  right: 16px;
-  width: 36px;
-  height: 36px;
-  background: #fff0f0;
-  color: #ff6b6b;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  background: rgba(255, 107, 107, 0.1);
+  color: var(--accent-red);
   border: none;
   border-radius: 50%;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s;
-  opacity: 0; /* 평소에는 숨김 */
+  transition: var(--transition-normal);
+  opacity: 0;
   cursor: pointer;
 }
 
 .match-item:hover .cancel-match-btn {
-  opacity: 1; /* 호버 시 보임 */
+  opacity: 1;
 }
 
 .cancel-match-btn:hover {
-  background: #ff6b6b;
+  background: var(--accent-red);
   color: white;
   transform: translateY(-50%) scale(1.1);
 }
 
+/* No Matches */
 .no-matches {
   text-align: center;
-  padding: 100px 20px;
+  padding: 80px 20px;
 }
 
 .no-matches p {
-  color: #888;
+  color: var(--text-muted);
   font-size: 1.1rem;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 }
 
 .no-matches button {
-  padding: 16px 40px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 14px 36px;
+  background: var(--primary-gradient);
   color: white;
   border: none;
-  border-radius: 50px;
-  font-weight: bold;
+  border-radius: var(--radius-full);
+  font-weight: var(--font-bold);
   font-size: 1rem;
-  transition: all 0.3s;
-  box-shadow: 0 10px 20px rgba(118, 75, 162, 0.3);
+  transition: var(--transition-smooth);
+  box-shadow: var(--shadow-primary);
   cursor: pointer;
 }
 
 .no-matches button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 15px 30px rgba(118, 75, 162, 0.4);
+  box-shadow: var(--shadow-primary-hover);
 }
 
-/* 검색창이나 필터가 없어서 허전하다면? (가상의 스타일 추가) */
-/* HTML에 <div class="filter-bar">...</div> 가 있다면 아래 스타일 적용 */
+/* Filter Bar */
 .filter-bar {
   display: flex;
   gap: 10px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   overflow-x: auto;
+  padding-bottom: 8px;
 }
 
 .filter-chip {
   padding: 8px 16px;
-  background: rgba(255,255,255,0.5);
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #666;
-  border: 1px solid rgba(0,0,0,0.05);
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: var(--radius-full);
+  font-size: 0.85rem;
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-light);
   cursor: pointer;
+  transition: var(--transition-normal);
+  white-space: nowrap;
+}
+
+.filter-chip:hover {
+  background: var(--bg-white);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
 }
 
 .filter-chip.active {
-  background: #333;
+  background: var(--primary-gradient);
   color: white;
+  border-color: transparent;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .matches-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .matches-header h1 {
+    font-size: 1.6rem;
+    text-align: center;
+  }
+
+  .matches-header .back-btn {
+    align-self: flex-start;
+  }
+
+  .story-thumbnail {
+    width: 70px;
+    height: 70px;
+  }
+
+  .match-item {
+    padding: 14px;
+    padding-right: 50px;
+    gap: 14px;
+  }
+
+  .match-avatar,
+  .match-item img {
+    width: 54px;
+    height: 54px;
+  }
+
+  .match-avatar .score-value {
+    font-size: 1.2rem;
+  }
+
+  .match-info h3 {
+    font-size: 1rem;
+  }
+
+  .last-message {
+    font-size: 0.85rem;
+  }
+
+  .cancel-match-btn {
+    opacity: 1;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+  }
+
+  .unread-badge {
+    right: 48px;
+    font-size: 0.7rem;
+    padding: 3px 8px;
+  }
 }
