@@ -13,7 +13,8 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
   const [commentText, setCommentText] = useState('');
   const [showComments, setShowComments] = useState(false);
   const [isCommentFocused, setIsCommentFocused] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [commentLoading, setCommentLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // 각 스토리별 댓글을 별도로 관리
   const [commentsMap, setCommentsMap] = useState({});
@@ -246,38 +247,37 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
   };
 
   const handleLike = async () => {
-    if (!currentStory?._id || loading) return;
+    if (!currentStory?._id) return;
 
-    setLoading(true);
+    // 낙관적 업데이트 - 먼저 UI 변경
+    const wasLiked = liked;
+    const prevCount = likeCount;
+
+    setLiked(!wasLiked);
+    setLikeCount(wasLiked ? Math.max(0, prevCount - 1) : prevCount + 1);
+
     try {
-      if (liked) {
+      if (wasLiked) {
         await storyAPI.unlikeStory(currentStory._id);
-        if (isMountedRef.current) {
-          setLiked(false);
-          setLikeCount(prev => Math.max(0, prev - 1));
-          // Socket.io로 좋아요 토글 이벤트 전송
-          toggleStoryLike(currentStory._id, false, likeCount - 1);
-        }
+        // Socket.io로 좋아요 토글 이벤트 전송
+        toggleStoryLike(currentStory._id, false, prevCount - 1);
       } else {
         await storyAPI.likeStory(currentStory._id);
-        if (isMountedRef.current) {
-          setLiked(true);
-          setLikeCount(prev => prev + 1);
-          // Socket.io로 좋아요 토글 이벤트 전송
-          toggleStoryLike(currentStory._id, true, likeCount + 1);
-        }
+        // Socket.io로 좋아요 토글 이벤트 전송
+        toggleStoryLike(currentStory._id, true, prevCount + 1);
       }
     } catch (error) {
       console.error('좋아요 처리 실패:', error);
-    } finally {
+      // 실패 시 롤백
       if (isMountedRef.current) {
-        setLoading(false);
+        setLiked(wasLiked);
+        setLikeCount(prevCount);
       }
     }
   };
 
   const handleAddComment = async () => {
-    if (!commentText?.trim() || !currentStory?._id || loading) return;
+    if (!commentText?.trim() || !currentStory?._id || commentLoading) return;
 
     console.log('💬 댓글 전송 시작:', {
       storyId: currentStory._id,
@@ -286,7 +286,7 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
     });
 
     const trimmedText = commentText.trim();
-    setLoading(true);
+    setCommentLoading(true);
 
     try {
       const res = await storyAPI.addComment(currentStory._id, trimmedText);
@@ -322,15 +322,15 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
       alert(error.response?.data?.error || error.message || '댓글 작성에 실패했습니다');
     } finally {
       // 무조건 로딩 상태 해제
-      setLoading(false);
+      setCommentLoading(false);
     }
   };
 
   const handleDeleteComment = async (commentId) => {
-    if (!commentId || !currentStory?._id || loading) return;
+    if (!commentId || !currentStory?._id || deleteLoading) return;
     if (!window.confirm('댓글을 삭제하시겠습니까?')) return;
 
-    setLoading(true);
+    setDeleteLoading(true);
     try {
       await storyAPI.deleteComment(currentStory._id, commentId);
       if (isMountedRef.current) {
@@ -349,16 +349,16 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
       }
     } finally {
       if (isMountedRef.current) {
-        setLoading(false);
+        setDeleteLoading(false);
       }
     }
   };
 
   const handleDeleteStory = async () => {
-    if (!currentStory?._id || loading) return;
+    if (!currentStory?._id || deleteLoading) return;
     if (!window.confirm('스토리를 삭제하시겠습니까?')) return;
 
-    setLoading(true);
+    setDeleteLoading(true);
     try {
       await storyAPI.deleteStory(currentStory._id);
       if (isMountedRef.current) {
@@ -373,7 +373,7 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
       }
     } finally {
       if (isMountedRef.current) {
-        setLoading(false);
+        setDeleteLoading(false);
       }
     }
   };
@@ -458,7 +458,7 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
               className="story-delete-btn"
               onClick={handleDeleteStory}
               title="스토리 삭제"
-              disabled={loading}
+              disabled={deleteLoading}
             >
               🗑️
             </button>
@@ -507,7 +507,6 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
               e.stopPropagation();
               handleLike();
             }}
-            disabled={loading}
             type="button"
           >
             {liked ? '❤️' : '🤍'}
@@ -519,7 +518,6 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
               e.stopPropagation();
               setShowComments(!showComments);
             }}
-            disabled={loading}
             type="button"
           >
             💬
@@ -569,7 +567,7 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
                         className="delete-comment-btn"
                         onClick={() => handleDeleteComment(comment._id)}
                         title="댓글 삭제"
-                        disabled={loading}
+                        disabled={deleteLoading}
                       >
                         ×
                       </button>
@@ -586,17 +584,17 @@ const StoryViewer = ({ stories = [], initialIndex = 0, onClose, onDelete }) => {
               placeholder="댓글을 입력하세요..."
               value={commentText}
               onChange={(e) => setCommentText(e.target.value?.slice(0, 500))}
-              onKeyPress={(e) => e.key === 'Enter' && !loading && handleAddComment()}
+              onKeyPress={(e) => e.key === 'Enter' && !commentLoading && handleAddComment()}
               onFocus={() => setIsCommentFocused(true)}
               onBlur={() => setIsCommentFocused(false)}
               maxLength={500}
-              disabled={loading}
+              disabled={commentLoading}
             />
             <button
               onClick={handleAddComment}
-              disabled={!commentText?.trim() || loading}
+              disabled={!commentText?.trim() || commentLoading}
             >
-              {loading ? '...' : '전송'}
+              {commentLoading ? '...' : '전송'}
             </button>
           </div>
         </div>
