@@ -188,7 +188,7 @@ const analyzeSkinStatus = (skinstatus) => {
 // POST /api/face/analyze - 얼굴 분석 및 프로필에 점수 저장
 router.post('/analyze', authMiddleware, upload.single('image'), async (req, res, next) => {
   try {
-    console.log('🔍 얼굴 분석 요청 받음, userId:', req.userId);
+    console.log('🔍 얼굴 분석 요청 받음, userId:', req.user.id);
 
     if (!req.file) {
       return res.status(400).json({
@@ -241,13 +241,13 @@ router.post('/analyze', authMiddleware, upload.single('image'), async (req, res,
     }
 
     const updatedUser = await User.findByIdAndUpdate(
-      req.userId,
+      req.user.id,
       updateData,
       { new: true }
     );
 
     console.log('✅ AI 점수 저장 완료:', {
-      userId: req.userId,
+      userId: req.user.id,
       aiScore: beautyScore,
       celebrityLookalike: celebrityData
     });
